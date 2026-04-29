@@ -1,0 +1,136 @@
+sources:
+  - name: revenue
+    description: The revenue source contains raw event, payment, subscription, and user data ingested from external systems.
+    database: revenue_product_analysis
+    schema: raw
+    
+    tables:
+      - name: events
+        description: Raw event records for user and system activity.
+        columns:
+          - name: event_id
+            description: A unique identifier for the event.
+            data_tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: Identifier of the user who triggered the event.
+            data_tests:
+              - not_null
+          - name: event_name
+            description: The name of the event performed by the user or system.
+          - name: event_at
+            description: The exact timestamp when the event occurred.
+            data_tests:
+              - not_null
+          - name: properties
+            description: A JSON-encoded string containing additional metadata about the event.
+          - name: session_id
+            description: Identifier for the session in which the event occurred.
+            data_tests:
+              - not_null
+
+      - name: payments
+        description: Raw payment transactions for subscriptions and one-time purchases.
+        columns:
+          - name: payment_id
+            description: A unique identifier for the payment transaction.
+            data_tests:
+              - not_null
+              - unique
+          - name: subscription_id
+            description: The subscription associated with the payment, if applicable.
+            data_tests:
+              - not_null
+          - name: user_id
+            description: The identifier of the user who made the payment.
+            data_tests:
+              - not_null
+          - name: plan_id
+            description: The plan associated with the payment.
+            data_tests:
+              - not_null
+          - name: billing_cycle
+            description: The billing frequency for the payment (for example, monthly or annual).
+          - name: amount
+            description: The amount charged for the payment.
+          - name: currency
+            description: The currency code used for the payment amount.
+          - name: status
+            description: The status of the payment transaction.
+          - name: payment_date
+            description: The date when the payment was processed.
+          - name: period_start
+            description: The beginning date of the billing period covered by the payment.
+          - name: period_end
+            description: The end date of the billing period covered by the payment.
+
+      - name: subscriptions
+        description: Raw subscription records for active and historical plans.
+        columns:
+          - name: subscription_id
+            description: A unique identifier for the subscription.
+            data_tests:
+              - not_null
+              - unique
+          - name: user_id
+            description: The identifier of the user who owns the subscription.
+          - name: plan_id
+            data_tests:
+              - not_null
+              - accepted_values:
+                  column_name: plan
+                  values:
+                    - plan_starter
+                    - plan_growth
+                    - plan_scale
+                    - plan_enterprise
+            description: The plan associated with the subscription.
+          - name: billing_cycle
+            description: The billing frequency for the subscription.
+          - name: status
+            description: The current status of the subscription.
+          - name: trial_start
+            description: The timestamp when the subscription trial began.
+          - name: trial_end
+            description: The timestamp when the subscription trial ended.
+          - name: subscription_start
+            description: The timestamp when the subscription officially started.
+          - name: subscription_end
+            description: The timestamp when the subscription ended or expired.
+          - name: cancelled_at
+            description: The timestamp when the subscription was cancelled.
+          - name: cancel_reason
+            description: The reason provided for subscription cancellation.
+          - name: mrr
+            description: Monthly recurring revenue value for the subscription.
+
+      - name: users
+        description: Raw user profile information for system customers.
+        columns:
+          - name: user_id
+            description: A unique identifier for the user.
+            data_tests:
+              - not_null
+              - unique
+          - name: company_name
+            description: The name of the user's company.
+          - name: email
+            description: The user's email address.
+            data_tests:
+              - not_null
+          - name: country
+            description: The user's country of residence or company location.
+          - name: industry
+            description: The user's industry sector.
+          - name: company_size
+            description: The size of the user's company.
+          - name: acquisition_channel
+            description: The marketing channel through which the user was acquired.
+          - name: created_at
+            description: The timestamp when the user record was first created.
+          - name: is_deleted
+            description: A flag indicating whether the user record has been deleted.
+
+  
+

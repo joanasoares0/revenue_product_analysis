@@ -1,0 +1,5 @@
+plan_id,plan_name,monthly_price,annual_price,tier,max_seats,features
+plan_starter,Starter,49,470,1,3,"invoicing,expenses"
+plan_growth,Growth,129,1238,2,10,"invoicing,expenses,payroll,api"
+plan_scale,Scale,299,2870,3,30,"invoicing,expenses,payroll,api,analytics,sso"
+plan_enterprise,Enterprise,799,7670,4,999,all+dedicated_csm
