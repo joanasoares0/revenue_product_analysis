@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: stg_revenue__events
+    description: Staging model for raw event records for user and system activity.
+    columns:
+      - name: event_id
+        description: A unique identifier for the event.
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: Identifier of the user who triggered the event.
+        data_tests:
+          - not_null
+      - name: session_id
+        description: Identifier for the session in which the event occurred.
+        data_tests:
+          - not_null
+      - name: sk_event_id
+        description: Surrogate key for the event.
+        data_tests:
+          - unique
+          - not_null
+      - name: event_name
+        description: "The name of the event performed by the user or system (normalized: lowercase, trimmed, underscores replaced with spaces)."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - signed up
+                  - email verified
+                  - trial started
+                  - onboarding step1
+                  - onboarding step2
+                  - activated
+                  - feature core used
+                  - feature advanced used
+                  - invited team member
+                  - converted paid
+                  - upgraded plan
+                  - payment failed
+                  - cancellation initiated
+      - name: funnel_stage_order
+        description: Numeric order for funnel stages based on event name.
+      - name: is_activation_event
+        description: Flag indicating if this is an activation event.
+      - name: is_conversion_event
+        description: Flag indicating if this is a conversion event.
+      - name: is_funnel_event
+        description: Flag indicating if this event is part of the core funnel.
+      - name: event_source
+        description: Source extracted from event properties JSON.
+      - name: activation_action
+        description: Activation action extracted from event properties JSON.
+      - name: feature_used
+        description: Feature used extracted from event properties JSON.
+      - name: upgraded_from_plan
+        description: Upgraded from plan extracted from event properties JSON.
+      - name: upgraded_to_plan
+        description: Upgraded to plan extracted from event properties JSON.
+      - name: churn_reason
+        description: Churn reason extracted from event properties JSON.
+      - name: raw_properties
+        description: "Raw properties JSON (normalized: lowercase, trimmed)."
+      - name: event_date
+        description: "The date when the event occurred (normalized from timestamp)."
+        data_tests:
+          - not_null
+      - name: event_month
+        description: The month when the event occurred (truncated from date).
+      - name: _stg_loaded_at
+        description: Timestamp when the record was loaded into staging.
