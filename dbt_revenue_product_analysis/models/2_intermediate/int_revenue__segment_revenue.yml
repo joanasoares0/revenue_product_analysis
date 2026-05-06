@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_revenue__segment_revenue
+    description: Revenue and ARPU metrics segmented by company size, industry, and acquisition channel.
+    columns:
+      - name: company_size
+        description: Company size category.
+      - name: industry
+        description: Industry sector.
+      - name: acquisition_channel
+        description: How the user was acquired.
+      - name: total_revenue
+        description: Total revenue from the segment.
+      - name: unique_users
+        description: Number of unique users in the segment.
+      - name: arpu
+        description: Average revenue per user in the segment.

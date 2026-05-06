@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_revenue__funnel_metrics
+    description: Funnel conversion metrics by month, showing user progression through stages.
+    columns:
+      - name: event_month
+        description: The month of events in yyyyMM format.
+      - name: signed_up_users
+        description: Number of users who signed up.
+      - name: activated_users
+        description: Number of users who activated.
+      - name: converted_users
+        description: Number of users who converted to paid.
+      - name: activation_rate
+        description: Percentage of signed-up users who activated.
+      - name: conversion_rate
+        description: Percentage of activated users who converted.

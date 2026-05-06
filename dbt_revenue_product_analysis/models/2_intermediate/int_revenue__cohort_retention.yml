@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_revenue__cohort_retention
+    description: Cohort-based retention analysis showing user retention rates over time.
+    columns:
+      - name: cohort_month
+        description: The month users first signed up (cohort).
+      - name: months_since_cohort
+        description: Number of months since the cohort start.
+      - name: total_users
+        description: Total users in the cohort.
+      - name: retained_users
+        description: Number of users still active/retained.
+      - name: retention_rate
+        description: Percentage of cohort users retained.
