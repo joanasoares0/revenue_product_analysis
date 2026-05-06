@@ -27,20 +27,20 @@ cleaned as (
  
         -- metrics 
         cast(amount as decimal(10, 2))                      as amount,
-        case lower(trim(billing_cycle))
+        -- this metric is used to account for monthly input, even if billing cycle is annual (e.g. $1200 annual = $100 MRR)
+         case lower(trim(billing_cycle))
             when 'monthly' then cast(amount as decimal(10, 2))
             when 'annual'  then round(cast(amount as decimal(10, 2)) / 12.0, 2)
-        end                                                 as mrr_contribution,
+        end                                                 as mrr_contribution, 
  
         -- timestamps 
         cast(payment_date  as date)                         as payment_date,
+        date_format(cast(payment_date as date), 'yyyyMM')  as payment_month,
         cast(period_start  as date)                         as period_start,
         cast(period_end    as date)                         as period_end,
  
-        date_trunc('month', cast(payment_date as date))     as payment_month,
- 
         datediff(
-            'day',
+            DAY,
             cast(period_start as date),
             cast(period_end   as date)
         )                                                   as days_in_period,

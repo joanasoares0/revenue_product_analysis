@@ -20,6 +20,7 @@ models:
         description: "The user's email address (normalized: lowercase, trimmed)."
         data_tests:
           - not_null
+          - validate_email_format
       - name: country
         description: "The user's country of residence or company location (normalized: uppercase, trimmed)."
         data_tests:
@@ -28,11 +29,13 @@ models:
                 values:
                   - GBP
                   - FR
-                  - NL 
+                  - NL
                   - ES
-                  - IE 
-                  - DE 
+                  - IE
+                  - DE
                   - IT
+                  - GB
+                  - PL
       - name: industry
         description: "The user's industry sector (normalized: trimmed, default 'unknown')."
       - name: acquisition_channel

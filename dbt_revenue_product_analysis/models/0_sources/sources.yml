@@ -78,17 +78,16 @@ sources:
           - name: user_id
             description: The identifier of the user who owns the subscription.
           - name: plan_id
+            description: The plan associated with the subscription.
             data_tests:
               - not_null
               - accepted_values:
                   arguments:
-                    column_name: plan
                     values:
                       - plan_starter
                       - plan_growth
                       - plan_scale
                       - plan_enterprise
-            description: The plan associated with the subscription.
           - name: billing_cycle
             description: The billing frequency for the subscription.
           - name: status

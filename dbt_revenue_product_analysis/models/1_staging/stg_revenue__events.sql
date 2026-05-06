@@ -34,6 +34,10 @@ cleaned as (
             else                                 999999
         end                                                 as funnel_stage_order,
  
+        -- timestamps 
+        cast(event_at as date)                              as event_date,
+        date_format(cast(event_at as date), 'yyyyMM')      as event_month,
+
         -- flags
         lower(trim(replace(event_name, '_', ' '))) = 'activated'               as is_activation_event,
         lower(trim(replace(event_name, '_', ' '))) = 'converted paid'          as is_conversion_event,
@@ -48,18 +52,14 @@ cleaned as (
         )                                                   as is_funnel_event,
  
         -- JSON property extraction 
-        get_json_object(properties, '$.source')             as event_source,
-        get_json_object(properties, '$.action')             as activation_action,
-        get_json_object(properties, '$.feature')            as feature_used,
-        get_json_object(properties, '$.from_plan')          as upgraded_from_plan,
-        get_json_object(properties, '$.to_plan')            as upgraded_to_plan,
-        get_json_object(properties, '$.reason')             as churn_reason,
-        lower(trim(properties))                             as raw_properties,
- 
-        -- timestamps 
-        cast(event_at as date)                              as event_date,
-        date_trunc('month', cast(event_at as date))         as event_month,
- 
+        lower(trim(cast(properties as string)))             as raw_properties,
+        get_json_object(cast(properties as string), '$.source')             as event_source,
+        get_json_object(cast(properties as string), '$.action')             as activation_action,
+        get_json_object(cast(properties as string), '$.feature')            as feature_used,
+        get_json_object(cast(properties as string), '$.from_plan')          as upgraded_from_plan,
+        get_json_object(cast(properties as string), '$.to_plan')            as upgraded_to_plan,
+        get_json_object(cast(properties as string), '$.reason')             as churn_reason,
+
         -- audit 
         current_timestamp()                                 as _stg_loaded_at
  

@@ -18,6 +18,9 @@ seeds:
 
 models:
   dbt_revenue_product_analysis:
+    +persist_docs:
+      relation: true
+      columns: true
     
     1_staging:
       +materialized: view

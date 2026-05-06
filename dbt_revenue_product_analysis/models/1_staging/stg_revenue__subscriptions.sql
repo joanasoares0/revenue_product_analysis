@@ -22,21 +22,31 @@ cleaned as (
         lower(trim(status)) = 'active'          as is_active,
         lower(trim(status)) = 'cancelled'       as is_churned,
         lower(trim(status)) = 'trial expired'   as is_trial_expired,
+        -- churn spike: Jul–Dec 2023 pricing event
+        (
+            lower(trim(replace(status, '_', ' '))) = 'cancelled'
+            and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)
+            and cast(cancelled_at as date) <  cast('{{ var("mrr_spike_end") }}' as date)
+        )                                                           as is_spike_churn,
  
         -- metrics 
         cast(mrr as decimal(10, 2))                                 as mrr,
-        cast(mrr * 12 as decimal(10, 2))                            as acv,
+
         -- timestamps 
         cast(trial_start        as date)                            as trial_start_date,
+        date_format(cast(trial_start as date), 'yyyyMM')              as cohort_month,
         cast(trial_end          as date)                            as trial_end_date,
         cast(subscription_start as date)                            as subscription_start_date,
         cast(subscription_end   as date)                            as subscription_end_date,
         cast(cancelled_at       as date)                            as cancelled_date,
-        cast(subscription_end as date))                             as effective_end_date,
+        coalesce(
+            cast(subscription_end as date),
+            cast('2099-12-31' as date)
+        )                                                           as effective_end_date,
  
         -- derived durations 
         datediff(
-            'day',
+            DAY,
             cast(trial_start as date),
             coalesce(cast(trial_end   as date), current_date())
         )                                                           as trial_duration_days,
@@ -44,21 +54,11 @@ cleaned as (
         case
             when cast(subscription_start as date) is not null
             then datediff(
-                'day',
+                DAY,
                 cast(subscription_start as date),
                 coalesce(cast(subscription_end as date), current_date())
             )
         end                                                         as subscription_duration_days,
- 
-        -- cohort 
-        date_trunc('month', cast(trial_start as date))              as cohort_month,
- 
-        -- churn spike: Jul–Dec 2023 pricing event
-        (
-            lower(trim(replace(status, '_', ' '))) = 'cancelled'
-            and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)
-            and cast(cancelled_at as date) <  cast('{{ var("mrr_spike_end") }}' as date)
-        )                                                           as is_spike_churn,
  
         -- audit 
         current_timestamp()                                         as _stg_loaded_at

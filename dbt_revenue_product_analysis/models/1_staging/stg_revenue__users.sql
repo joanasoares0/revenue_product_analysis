@@ -12,14 +12,15 @@ cleaned as (
         {{ dbt_utils.generate_surrogate_key(['user_id']) }}         as sk_user_id,
         trim(user_id)                                               as user_id,
         
-        -- descriptions
+        -- atributes
         upper(trim(company_name))                                   as company_name,
         lower(trim(email))                                          as email,
         upper(trim(country))                                        as country,
-        coalesce(trim(industry), 'unknown')                         as industry,
-        coalesce(trim(acquisition_channel), 'unknown')              as acquisition_channel,
+        coalesce(lower(trim(industry)), 'unknown')                   as industry,
+        coalesce(lower(trim(replace(acquisition_channel, ' ', ''))), 'unknown')        as acquisition_channel,
         
-        -- derived descriptions        
+        -- derived atributes   
+        trim(company_size)                                          as company_size_raw,     
         case trim(company_size)
             when '1-5'    then 'micro'
             when '6-20'   then 'small'
@@ -36,11 +37,9 @@ cleaned as (
             else               0
         end                                                         as company_size_order,
  
-        trim(company_size)                                          as company_size_raw,
-        
         -- timestamps
         cast(created_at as date)                               as signed_up_at,
-        date_trunc('month', cast(created_at as date))          as signup_month,
+        date_format(cast(created_at as date), 'yyyyMM')         as signup_month,
  
         -- flags 
         case
@@ -48,6 +47,7 @@ cleaned as (
             when lower(trim(is_deleted)) = 'false' then 0
             else 999999
         end                                                         as is_deleted,
+
         -- audit 
         current_timestamp()                                         as _stg_loaded_at
  
