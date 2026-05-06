@@ -1,9 +1,11 @@
+version: 2
+
 sources:
   - name: revenue
     description: The revenue source contains raw event, payment, subscription, and user data ingested from external systems.
     database: revenue_product_analysis
-    schema: raw
-    
+    schema: 0_raw
+
     tables:
       - name: events
         description: Raw event records for user and system activity.
@@ -79,12 +81,13 @@ sources:
             data_tests:
               - not_null
               - accepted_values:
-                  column_name: plan
-                  values:
-                    - plan_starter
-                    - plan_growth
-                    - plan_scale
-                    - plan_enterprise
+                  arguments:
+                    column_name: plan
+                    values:
+                      - plan_starter
+                      - plan_growth
+                      - plan_scale
+                      - plan_enterprise
             description: The plan associated with the subscription.
           - name: billing_cycle
             description: The billing frequency for the subscription.
@@ -116,6 +119,9 @@ sources:
           - name: company_name
             description: The name of the user's company.
           - name: email
+            config:
+              meta:
+                contains_pii: true
             description: The user's email address.
             data_tests:
               - not_null

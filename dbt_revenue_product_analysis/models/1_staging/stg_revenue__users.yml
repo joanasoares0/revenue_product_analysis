@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: stg_revenue__users
+    description: Staging model for raw user profile information for system customers.
+    columns:
+      - name: sk_user_id
+        description: Surrogate key for the user.
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: A unique identifier for the user.
+        data_tests:
+          - unique
+          - not_null
+      - name: company_name
+        description: "The name of the user's company (normalized: uppercase, trimmed)."
+      - name: email
+        description: "The user's email address (normalized: lowercase, trimmed)."
+        data_tests:
+          - not_null
+      - name: country
+        description: "The user's country of residence or company location (normalized: uppercase, trimmed)."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - GBP
+                  - FR
+                  - NL 
+                  - ES
+                  - IE 
+                  - DE 
+                  - IT
+      - name: industry
+        description: "The user's industry sector (normalized: trimmed, default 'unknown')."
+      - name: acquisition_channel
+        description: "The marketing channel through which the user was acquired (normalized: trimmed, default 'unknown')."
+      - name: company_size
+        description: "The size of the user's company (categorized: micro, small, medium, large, unknown)."
+      - name: company_size_order
+        description: "Numeric order for company size (1=micro, 2=small, 3=medium, 4=large, 0=unknown)."
+      - name: company_size_raw
+        description: "Raw company size value (trimmed)."
+      - name: signed_up_at
+        description: "The date when the user signed up (normalized from timestamp)."
+        data_tests:
+          - not_null
+      - name: signup_month
+        description: The month when the user signed up (truncated from date).
+      - name: is_deleted
+        description: Flag indicating if the user is deleted (1=yes, 0=no, 999999=unknown).
+      - name: _stg_loaded_at
+        description: Timestamp when the record was loaded into staging.

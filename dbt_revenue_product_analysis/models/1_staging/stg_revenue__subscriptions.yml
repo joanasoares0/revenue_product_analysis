@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: stg_revenue__subscriptions
+    description: Staging model for raw subscription records for active and historical plans.
+    columns:
+      - name: subscription_id
+        description: A unique identifier for the subscription.
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: The identifier of the user who owns the subscription.
+        data_tests:
+          - not_null
+      - name: plan_id
+        description: The plan associated with the subscription.
+      - name: sk_subscription_id
+        description: Surrogate key for the subscription.
+        data_tests:
+          - unique
+          - not_null
+      - name: billing_cycle
+        description: "The billing frequency for the subscription (normalized: lowercase, trimmed, underscores replaced with spaces)."
+      - name: status
+        description: "The current status of the subscription (normalized: lowercase, trimmed, underscores replaced with spaces)."
+      - name: is_active
+        description: Flag indicating if the subscription is active.
+      - name: is_churned
+        description: Flag indicating if the subscription is churned.
+      - name: is_trial_expired
+        description: Flag indicating if the trial has expired.
+      - name: cancel_reason
+        description: "The reason provided for subscription cancellation (normalized: lowercase, trimmed, underscores replaced with spaces, default 'not cancelled')."
+      - name: mrr
+        description: Monthly recurring revenue value for the subscription.
+      - name: acv
+        description: Annual contract value for the subscription.
+      - name: trial_start_date
+        description: "The date when the subscription trial began (normalized from timestamp)."
+      - name: trial_end_date
+        description: "The date when the subscription trial ended (normalized from timestamp)."
+      - name: subscription_start_date
+        description: "The date when the subscription officially started (normalized from timestamp)."
+      - name: subscription_end_date
+        description: "The date when the subscription ended or expired (normalized from timestamp)."
+      - name: cancelled_date
+        description: "The date when the subscription was cancelled (normalized from timestamp)."
+      - name: effective_end_date
+        description: Sentinel date for active subscriptions (simplifies range queries).
+      - name: trial_duration_days
+        description: Duration of the trial in days.
+      - name: subscription_duration_days
+        description: Duration of the subscription in days.
+      - name: cohort_month
+        description: The month when the trial started (for cohort analysis).
+      - name: is_spike_churn
+        description: Flag indicating if this is spike churn based on pricing event.
+      - name: _stg_loaded_at
+        description: Timestamp when the record was loaded into staging.

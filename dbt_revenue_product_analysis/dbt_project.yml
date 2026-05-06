@@ -1,4 +1,6 @@
 name: dbt_revenue_product_analysis
+version: '1.0.0'
+config-version: 2
 
 profile: dbt_revenue_product_analysis
 
@@ -12,14 +14,29 @@ clean-targets:
 seeds:
   # Builds seeds into '<your_schema_name>_raw'
   dbt_revenue_product_analysis:
-    +schema: raw
+    +schema: 0_raw
 
 models:
   dbt_revenue_product_analysis:
-    # Materialize staging models as views, and marts as tables
+    
     1_staging:
       +materialized: view
+      +schema: 1_staging
+      +docs:
+        node_color: "#1D9E75" 
+
     2_intermediate:
       +materialized: view
+      +schema: 2_intermediate
+      +docs:
+        node_color: "#7F77DD" 
+
     3_marts:
       +materialized: table
+      +schema: 3_marts
+      +docs:
+        node_color: "#D85A30" 
+
+vars:
+    mrr_spike_start:     '2023-07-01'
+    mrr_spike_end:       '2023-12-31'

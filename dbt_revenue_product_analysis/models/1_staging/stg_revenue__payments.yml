@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: stg_revenue__payments
+    description: Staging model for raw payment transactions for subscriptions and one-time purchases.
+    columns:
+      - name: payment_id
+        description: A unique identifier for the payment transaction.
+        data_tests:
+          - unique
+          - not_null
+      - name: subscription_id
+        description: The subscription associated with the payment, if applicable.
+      - name: user_id
+        description: The identifier of the user who made the payment.
+        data_tests:
+          - not_null
+      - name: plan_id
+        description: The plan associated with the payment.
+      - name: sk_payment_id
+        description: Surrogate key for the payment.
+        data_tests:
+          - unique
+          - not_null
+      - name: billing_cycle
+        description: "The billing frequency for the payment (normalized: lowercase, trimmed, underscores replaced with spaces)."
+      - name: currency
+        description: "The currency code used for the payment amount (normalized: uppercase, trimmed)."
+      - name: status
+        description: "The status of the payment transaction (normalized: lowercase, trimmed, underscores replaced with spaces)."
+        data_tests:
+          accepted_values:
+            - succeeded
+            - failed
+            - refunded
+      - name: is_revenue_recognised
+        description: Flag indicating if the payment is revenue recognized.
+      - name: is_failed
+        description: Flag indicating if the payment failed.
+      - name: is_refunded
+        description: Flag indicating if the payment was refunded.
+      - name: revenue_type
+        description: Revenue classification label based on billing cycle.
+      - name: amount
+        description: The amount charged for the payment.
+        data_tests:
+          - not_null
+      - name: mrr_contribution
+        description: Normalized MRR contribution for cross-billing-cycle comparisons.
+      - name: payment_date
+        description: "The date when the payment was processed (normalized from timestamp)."
+        data_tests:
+          - not_null
+      - name: period_start
+        description: "The beginning date of the billing period covered by the payment (normalized from timestamp)."
+      - name: period_end
+        description: "The end date of the billing period covered by the payment (normalized from timestamp)."
+      - name: payment_month
+        description: The month when the payment was processed (truncated from date).
+      - name: days_in_period
+        description: Number of days in the billing period.
+      - name: _stg_loaded_at
+        description: Timestamp when the record was loaded into staging.
