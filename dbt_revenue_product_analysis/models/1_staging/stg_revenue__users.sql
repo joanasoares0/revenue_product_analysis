@@ -9,7 +9,7 @@ cleaned as (
  
     select
         -- keys 
-        {{ dbt_utils.generate_surrogate_key(['user_id']) }}         as sk_user_id,
+        {{ dbt_utils.generate_surrogate_key(['user_id']) }}         as sk_user_id, -- noqa: TMP,PRS
         trim(user_id)                                               as user_id,
         
         -- atributes

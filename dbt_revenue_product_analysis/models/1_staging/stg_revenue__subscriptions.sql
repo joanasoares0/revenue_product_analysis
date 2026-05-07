@@ -8,7 +8,7 @@ cleaned as (
  
     select
         -- keys 
-        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id,
+        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id, -- noqa: TMP,PRS
         trim(subscription_id)                                       as subscription_id,
         trim(user_id)                                               as user_id,
         trim(plan_id)                                               as plan_id,

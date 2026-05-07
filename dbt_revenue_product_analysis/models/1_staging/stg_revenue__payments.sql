@@ -9,7 +9,7 @@ cleaned as (
  
     select
         -- keys
-        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id,
+        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id, -- noqa: TMP,PRS
         trim(payment_id)        as payment_id,
         trim(subscription_id)   as subscription_id,
         trim(user_id)           as user_id,

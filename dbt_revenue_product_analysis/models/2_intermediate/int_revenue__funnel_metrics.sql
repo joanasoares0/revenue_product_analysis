@@ -5,7 +5,7 @@ Addresses funnel drop-offs, activation rates, and time-to-value insights.
 
 
 with events as (
-    select * 
+    select *
     from {{ ref('stg_revenue__events') }}
 ),
 
@@ -13,9 +13,12 @@ with events as (
 funnel_stages as (
     select
         event_month,
-        count(distinct case when funnel_stage_order = 1 then user_id end) as signed_up_users,
-        count(distinct case when funnel_stage_order = 6 then user_id end) as activated_users,
-        count(distinct case when funnel_stage_order = 10 then user_id end) as converted_users
+        count(distinct case when funnel_stage_order = 1 then user_id end)
+            as signed_up_users,
+        count(distinct case when funnel_stage_order = 6 then user_id end)
+            as activated_users,
+        count(distinct case when funnel_stage_order = 10 then user_id end)
+            as converted_users
     from events
     group by event_month
 ),
@@ -27,16 +30,16 @@ funnel_rates as (
         signed_up_users,
         activated_users,
         converted_users,
-        case 
-            when signed_up_users > 0 then activated_users / signed_up_users 
-            else 0 
+        case
+            when signed_up_users > 0 then activated_users / signed_up_users
+            else 0
         end as activation_rate,
-        case 
-            when activated_users > 0 then converted_users / activated_users 
-            else 0 
+        case
+            when activated_users > 0 then converted_users / activated_users
+            else 0
         end as conversion_rate
     from funnel_stages
 )
 
-select * 
+select *
 from funnel_rates

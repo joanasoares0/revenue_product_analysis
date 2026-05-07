@@ -4,7 +4,7 @@ Enables retention tracking and cohort comparisons.
 #}
 
 with subscriptions as (
-    select * 
+    select *
     from {{ ref('stg_revenue__subscriptions') }}
 ),
 
@@ -15,9 +15,10 @@ cohorts as (
         user_id,
         subscription_start_date,
         effective_end_date,
-        datediff(MONTH, cohort_month, date_trunc('month', current_date())) as months_since_cohort
+        datediff(month, cohort_month, date_trunc('month', current_date()))
+            as months_since_cohort
     from subscriptions
-    where is_active 
+    where is_active
 ),
 
 -- Calculate retention (retained_users and total_users) by cohort and months since cohort
@@ -26,9 +27,15 @@ retention as (
         cohort_month,
         months_since_cohort,
         count(distinct user_id) as total_users,
-        count(distinct 
-            case when effective_end_date >= add_months(cohort_month, months_since_cohort) then user_id 
-            end) as retained_users
+        count(
+            distinct
+            case
+                when
+                    effective_end_date
+                    >= add_months(cohort_month, months_since_cohort)
+                    then user_id
+            end
+        ) as retained_users
     from cohorts
     where months_since_cohort <= 12
     group by cohort_month, months_since_cohort
@@ -41,12 +48,12 @@ retention_rates as (
         months_since_cohort,
         total_users,
         retained_users,
-        case 
-            when total_users > 0 then retained_users / total_users 
-            else 0 
+        case
+            when total_users > 0 then retained_users / total_users
+            else 0
         end as retention_rate
     from retention
 )
 
-select * 
+select *
 from retention_rates

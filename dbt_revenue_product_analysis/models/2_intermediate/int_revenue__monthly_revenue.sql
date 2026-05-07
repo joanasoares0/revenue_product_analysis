@@ -4,7 +4,7 @@ Supports revenue evolution and seasonality questions.
 #}
 
 with payments as (
-    select * 
+    select *
     from {{ ref('stg_revenue__payments') }}
 ),
 
@@ -29,12 +29,18 @@ revenue_growth as (
         total_mrr_contribution,
         paying_users,
         avg_payment_amount,
-        lag(total_mrr_contribution) over (order by payment_month) as prev_month_mrr,
-        (total_mrr_contribution - lag(total_mrr_contribution) over (order by payment_month)) 
-        / 
-        nullif(lag(total_mrr_contribution) over (order by payment_month), 0) * 100 as mrr_growth_pct
+        lag(total_mrr_contribution)
+            over (order by payment_month)
+            as prev_month_mrr,
+        (
+            total_mrr_contribution
+            - lag(total_mrr_contribution) over (order by payment_month)
+        )
+        /
+        nullif(lag(total_mrr_contribution) over (order by payment_month), 0)
+        * 100 as mrr_growth_pct
     from monthly_revenue
 )
 
-select * 
+select *
 from revenue_growth

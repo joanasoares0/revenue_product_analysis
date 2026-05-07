@@ -1,6 +1,5 @@
 name: dbt_revenue_product_analysis
 version: '1.0.0'
-config-version: 2
 
 profile: dbt_revenue_product_analysis
 
@@ -21,7 +20,11 @@ models:
     +persist_docs:
       relation: true
       columns: true
-    
+
+    0_sources:
+      +docs:
+        node_color: "#A8A8A8"
+
     1_staging:
       +materialized: view
       +schema: 1_staging
