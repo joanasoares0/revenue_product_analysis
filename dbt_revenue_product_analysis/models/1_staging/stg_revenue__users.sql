@@ -17,7 +17,7 @@ cleaned as (
         lower(trim(email))                                          as email,
         upper(trim(country))                                        as country,
         coalesce(lower(trim(industry)), 'unknown')                   as industry,
-        coalesce(lower(trim(replace(acquisition_channel, ' ', ''))), 'unknown')        as acquisition_channel,
+        coalesce(lower(trim(replace(acquisition_channel, ' ', '_'))), 'unknown')       as acquisition_channel,
         
         -- derived atributes   
         trim(company_size)                                          as company_size_raw,     

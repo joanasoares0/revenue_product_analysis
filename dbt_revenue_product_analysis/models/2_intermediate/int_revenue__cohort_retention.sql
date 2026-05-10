@@ -1,6 +1,8 @@
 {#
-Performs cohort analysis with retention rates over months. 
-Enables retention tracking and cohort comparisons.
+Cohort retention logic — encapsulates non-trivial date arithmetic that would be
+impractical to replicate in a BI tool: casting yyyyMM strings to dates,
+add_months range checks against effective_end_date, and months-since-cohort
+window. Consumed by fct_cohort_retention in the marts layer.
 #}
 
 with subscriptions as (
@@ -8,20 +10,23 @@ with subscriptions as (
     from {{ ref('stg_revenue__subscriptions') }}
 ),
 
--- Calculate months since cohort for each active user
+-- Cast cohort_month (yyyyMM string) to a date (first of month) for date arithmetic
 cohorts as (
     select
         cohort_month,
+        to_date(concat(cohort_month, '01'), 'yyyyMMdd') as cohort_start_date,
         user_id,
         subscription_start_date,
         effective_end_date,
-        datediff(month, cohort_month, date_trunc('month', current_date()))
-            as months_since_cohort
+        datediff(
+            month,
+            to_date(concat(cohort_month, '01'), 'yyyyMMdd'),
+            date_trunc('month', current_date())
+        )                                               as months_since_cohort
     from subscriptions
     where is_active
 ),
 
--- Calculate retention (retained_users and total_users) by cohort and months since cohort
 retention as (
     select
         cohort_month,
@@ -30,30 +35,23 @@ retention as (
         count(
             distinct
             case
-                when
-                    effective_end_date
-                    >= add_months(cohort_month, months_since_cohort)
-                    then user_id
+                when effective_end_date
+                    >= add_months(cohort_start_date, months_since_cohort)
+                then user_id
             end
-        ) as retained_users
+        )                       as retained_users
     from cohorts
     where months_since_cohort <= 12
     group by cohort_month, months_since_cohort
-),
-
--- Calculate retention rates
-retention_rates as (
-    select
-        cohort_month,
-        months_since_cohort,
-        total_users,
-        retained_users,
-        case
-            when total_users > 0 then retained_users / total_users
-            else 0
-        end as retention_rate
-    from retention
 )
 
-select *
-from retention_rates
+select
+    cohort_month,
+    months_since_cohort,
+    total_users,
+    retained_users,
+    round(
+        retained_users / cast(total_users as decimal(10, 4)),
+        4
+    )                           as retention_rate
+from retention

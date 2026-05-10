@@ -24,7 +24,7 @@ cleaned as (
         lower(trim(status)) = 'trial expired'   as is_trial_expired,
         -- churn spike: Jul–Dec 2023 pricing event
         (
-            lower(trim(replace(status, '_', ' '))) = 'cancelled'
+            is_churned
             and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)
             and cast(cancelled_at as date) <  cast('{{ var("mrr_spike_end") }}' as date)
         )                                                           as is_spike_churn,

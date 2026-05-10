@@ -34,8 +34,6 @@ models:
         description: "The reason provided for subscription cancellation (normalized: lowercase, trimmed, underscores replaced with spaces, default 'not cancelled')."
       - name: mrr
         description: Monthly recurring revenue value for the subscription.
-      - name: acv
-        description: Annual contract value for the subscription.
       - name: trial_start_date
         description: "The date when the subscription trial began (normalized from timestamp)."
       - name: trial_end_date
