@@ -41,8 +41,6 @@ models:
         description: Flag indicating if the payment failed.
       - name: is_refunded
         description: Flag indicating if the payment was refunded.
-      - name: revenue_type
-        description: Revenue classification label based on billing cycle.
       - name: amount
         description: The amount charged for the payment.
         data_tests:

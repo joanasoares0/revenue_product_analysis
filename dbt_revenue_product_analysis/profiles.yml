@@ -1,0 +1,19 @@
+dbt_revenue_product_analysis:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      database: revenue_product_analysis
+      schema: dev
+      host: "{{ env_var('DB_HOST_DEV') }}"
+      http_path: "{{ env_var('DB_HTTP_PATH_DEV') }}"
+      token: "{{ env_var('DB_TOKEN_DEV') }}"
+      threads: 16
+    prod:
+      type: databricks
+      database: prod_revenue_product_analysis
+      schema: prod
+      host: "{{ env_var('DB_HOST_PROD') }}"
+      http_path: "{{ env_var('DB_HTTP_PATH_PROD') }}"
+      token: "{{ env_var('DB_TOKEN_PROD') }}"
+      threads: 16

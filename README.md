@@ -24,7 +24,10 @@ Churn total de ~35% das subscrições ao longo dos 3 anos
 Methodology
 
 Skills
-	
+github pr, dbt core, sqlfluff precommit hook, github actions	
 Results & Business recommnedations
 
 Next steps# revenue_product_analysis
+
+
+Answer the data questions: 📊 Revenue Analysis How has revenue evolved over time (MRR/ARR growth)? What are the main drivers of revenue (new, expansion, churn)? What is the revenue churn rate and how is it impacting growth? Which customer segments generate the most revenue? What is the average revenue per user (ARPU) and how does it vary? What is the customer lifetime value (LTV)? Are there any seasonality patterns or trends in revenue? 🔍 Product Funnel Analysis What is the conversion rate at each stage of the funnel? Where are the biggest drop-offs occurring? How long does it take users to reach activation (time to first value)? How does activation impact user retention? Which user actions are most correlated with conversion? What differentiates users who convert vs those who don’t? What is the retention rate over time (cohort analysis)? Which acquisition channels or segments convert best?

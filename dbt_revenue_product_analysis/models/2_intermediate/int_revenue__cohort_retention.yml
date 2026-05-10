@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: int_revenue__cohort_retention
+    description: >
+      Cohort retention rates by (cohort_month × months_since_cohort). Encapsulates
+      complex date arithmetic on yyyyMM strings. Consumed by fct_cohort_retention.
+    columns:
+      - name: cohort_month
+        description: Trial-start month in yyyyMM format.
+        data_tests:
+          - not_null
+      - name: months_since_cohort
+        description: Months elapsed since cohort start (0–12).
+        data_tests:
+          - not_null
+      - name: total_users
+        description: Total active users in the cohort at observation time.
+        data_tests:
+          - not_null
+      - name: retained_users
+        description: Users whose effective_end_date covers the observation month.
+        data_tests:
+          - not_null
+      - name: retention_rate
+        description: Fraction of cohort retained (0–1).
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "between 0 and 1"

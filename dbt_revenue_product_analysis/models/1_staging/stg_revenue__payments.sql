@@ -1,15 +1,26 @@
+{{
+    config(
+        materialized = 'incremental',
+        unique_key   = 'sk_payment_id',
+        on_schema_change = 'sync_all_columns'
+    )
+}}
+
 with source as (
- 
-    select * 
+
+    select *
     from {{ source('revenue', 'payments') }}
- 
+    {% if is_incremental() %}
+        where cast(payment_date as date) > (select max(payment_date) from {{ this }})
+    {% endif %}
+
 ),
  
 cleaned as (
  
     select
         -- keys
-        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id,
+        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id, -- noqa: TMP,PRS
         trim(payment_id)        as payment_id,
         trim(subscription_id)   as subscription_id,
         trim(user_id)           as user_id,
@@ -28,10 +39,11 @@ cleaned as (
         -- metrics 
         cast(amount as decimal(10, 2))                      as amount,
         -- this metric is used to account for monthly input, even if billing cycle is annual (e.g. $1200 annual = $100 MRR)
-         case lower(trim(billing_cycle))
+        case lower(trim(billing_cycle))
             when 'monthly' then cast(amount as decimal(10, 2))
             when 'annual'  then round(cast(amount as decimal(10, 2)) / 12.0, 2)
-        end                                                 as mrr_contribution, 
+            else                 cast(amount as decimal(10, 2))  -- fallback for unknown billing cycles
+        end                                                 as mrr_contribution,
  
         -- timestamps 
         cast(payment_date  as date)                         as payment_date,

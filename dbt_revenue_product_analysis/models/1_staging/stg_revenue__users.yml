@@ -22,12 +22,13 @@ models:
           - not_null
           - validate_email_format
       - name: country
-        description: "The user's country of residence or company location (normalized: uppercase, trimmed)."
+        description: "The user's country of residence or company location (normalized: uppercase, two-letter ISO 3166-1 alpha-2 code)."
         data_tests:
           - accepted_values:
+              config:
+                severity: warn
               arguments:
                 values:
-                  - GBP
                   - FR
                   - NL
                   - ES

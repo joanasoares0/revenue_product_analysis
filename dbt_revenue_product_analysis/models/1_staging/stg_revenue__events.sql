@@ -1,15 +1,26 @@
+{{
+    config(
+        materialized = 'incremental',
+        unique_key   = 'sk_event_id',
+        on_schema_change = 'sync_all_columns'
+    )
+}}
+
 with source as (
- 
-    select * 
+
+    select *
     from {{ source('revenue', 'events') }}
- 
+    {% if is_incremental() %}
+        where cast(event_at as date) > (select max(event_date) from {{ this }})
+    {% endif %}
+
 ),
  
 cleaned as (
  
     select
         -- keys 
-        {{ dbt_utils.generate_surrogate_key(['event_id']) }} as sk_event_id,
+        {{ dbt_utils.generate_surrogate_key(['event_id']) }} as sk_event_id, -- noqa: TMP,PRS
         trim(event_id)              as event_id,
         trim(user_id)               as user_id,
         trim(session_id)            as session_id,

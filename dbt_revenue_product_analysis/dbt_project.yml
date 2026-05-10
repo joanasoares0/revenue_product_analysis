@@ -1,6 +1,5 @@
 name: dbt_revenue_product_analysis
 version: '1.0.0'
-config-version: 2
 
 profile: dbt_revenue_product_analysis
 
@@ -16,30 +15,47 @@ seeds:
   dbt_revenue_product_analysis:
     +schema: 0_raw
 
+tests:
+  dbt_revenue_product_analysis:
+    +store_failures: true
+    +schema: test_failures
+
 models:
   dbt_revenue_product_analysis:
     +persist_docs:
       relation: true
       columns: true
-    
+
+    0_sources:
+      +docs:
+        node_color: "#A8A8A8"
+
     1_staging:
       +materialized: view
       +schema: 1_staging
+      +tags: ['revenue', 'daily']
       +docs:
-        node_color: "#1D9E75" 
+        node_color: "#1D9E75"
 
     2_intermediate:
       +materialized: view
       +schema: 2_intermediate
+      +tags: ['revenue', 'daily']
       +docs:
-        node_color: "#7F77DD" 
+        node_color: "#7F77DD"
 
     3_marts:
       +materialized: table
-      +schema: 3_marts
       +docs:
-        node_color: "#D85A30" 
+        node_color: "#D85A30"
+      dimensions:
+        +schema: 3_marts
+        +tags: ['dimensions', 'daily']
+      facts:
+        +schema: 3_marts
+        +tags: ['facts', 'daily']
 
 vars:
-    mrr_spike_start:     '2023-07-01'
-    mrr_spike_end:       '2023-12-31'
+    mrr_spike_start:        '2023-07-01'
+    mrr_spike_end:          '2023-12-31'
+    reporting_start_date:   '2022-01-01'  # first month included in time-series marts

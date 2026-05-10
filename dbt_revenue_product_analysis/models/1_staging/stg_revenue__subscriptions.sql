@@ -8,7 +8,7 @@ cleaned as (
  
     select
         -- keys 
-        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id,
+        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id, -- noqa: TMP,PRS
         trim(subscription_id)                                       as subscription_id,
         trim(user_id)                                               as user_id,
         trim(plan_id)                                               as plan_id,
@@ -24,7 +24,7 @@ cleaned as (
         lower(trim(status)) = 'trial expired'   as is_trial_expired,
         -- churn spike: Jul–Dec 2023 pricing event
         (
-            lower(trim(replace(status, '_', ' '))) = 'cancelled'
+            is_churned
             and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)
             and cast(cancelled_at as date) <  cast('{{ var("mrr_spike_end") }}' as date)
         )                                                           as is_spike_churn,
