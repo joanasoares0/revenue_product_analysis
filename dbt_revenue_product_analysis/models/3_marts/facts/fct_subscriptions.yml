@@ -92,10 +92,10 @@ models:
               arguments:
                 expression: ">= 0"
       - name: trial_duration_days
-        data_type: int
+        data_type: bigint
         description: Duration of the trial period in days.
       - name: subscription_duration_days
-        data_type: int
+        data_type: bigint
         description: Duration of the paid subscription in days (null if not yet started).
       - name: trial_start_date
         data_type: date

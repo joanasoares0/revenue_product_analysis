@@ -128,13 +128,13 @@ models:
         constraints:
           - type: not_null
       - name: days_to_email_verified
-        data_type: int
+        data_type: bigint
         description: Days from signup to first email verification (null if not reached).
       - name: days_to_activation
-        data_type: int
+        data_type: bigint
         description: Days from signup to first activation event (null if not reached).
       - name: days_to_conversion
-        data_type: int
+        data_type: bigint
         description: Days from signup to first paid conversion event (null if not reached).
       - name: has_paid_subscription
         data_type: boolean
@@ -150,7 +150,7 @@ models:
         data_type: decimal(10, 2)
         description: MRR from the user's most recently started subscription (null if no subscription).
       - name: max_subscription_duration_days
-        data_type: int
+        data_type: bigint
         description: Duration in days of the user's longest paid subscription.
       - name: first_subscription_start_date
         data_type: date

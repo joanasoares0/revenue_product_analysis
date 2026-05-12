@@ -113,7 +113,7 @@ models:
         data_type: date
         description: End of the billing period covered by this payment.
       - name: days_in_period
-        data_type: int
+        data_type: bigint
         description: Number of days in the billing period.
       - name: _stg_loaded_at
         data_type: timestamp
