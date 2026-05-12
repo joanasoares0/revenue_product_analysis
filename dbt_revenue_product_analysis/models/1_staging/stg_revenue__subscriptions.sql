@@ -1,23 +1,23 @@
 with source as (
- 
+
     select * from {{ source('revenue', 'subscriptions') }}
- 
+
 ),
- 
+
 cleaned as (
- 
+
     select
-        -- keys 
-        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id, -- noqa: TMP,PRS
+        -- keys  -- noqa: LT02
+        {{ dbt_utils.generate_surrogate_key(['subscription_id']) }} as sk_subscription_id, -- noqa: TMP,PRS,LT02,LT05
         trim(subscription_id)                                       as subscription_id,
         trim(user_id)                                               as user_id,
         trim(plan_id)                                               as plan_id,
- 
-        -- attributes 
+
+        -- attributes
         lower(trim(billing_cycle))              as billing_cycle,
         lower(trim(status))                     as status,
         coalesce(lower(trim(replace(cancel_reason, '_', ' '))), 'not cancelled')  as cancel_reason,
- 
+
         -- flags
         lower(trim(status)) = 'active'          as is_active,
         lower(trim(status)) = 'cancelled'       as is_churned,
@@ -28,11 +28,11 @@ cleaned as (
             and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)
             and cast(cancelled_at as date) <  cast('{{ var("mrr_spike_end") }}' as date)
         )                                                           as is_spike_churn,
- 
-        -- metrics 
+
+        -- metrics
         cast(mrr as decimal(10, 2))                                 as mrr,
 
-        -- timestamps 
+        -- timestamps
         cast(trial_start        as date)                            as trial_start_date,
         date_format(cast(trial_start as date), 'yyyyMM')              as cohort_month,
         cast(trial_end          as date)                            as trial_end_date,
@@ -43,14 +43,14 @@ cleaned as (
             cast(subscription_end as date),
             cast('2099-12-31' as date)
         )                                                           as effective_end_date,
- 
-        -- derived durations 
+
+        -- derived durations
         datediff(
             DAY,
             cast(trial_start as date),
             coalesce(cast(trial_end   as date), current_date())
         )                                                           as trial_duration_days,
- 
+
         case
             when cast(subscription_start as date) is not null
             then datediff(
@@ -59,13 +59,13 @@ cleaned as (
                 coalesce(cast(subscription_end as date), current_date())
             )
         end                                                         as subscription_duration_days,
- 
-        -- audit 
+
+        -- audit
         current_timestamp()                                         as _stg_loaded_at
- 
+
     from source
     where trim(subscription_id) is not null
 )
- 
-select * 
+
+select *
 from cleaned

@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: fct_cohort_retention
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: cohort_month × months_since_cohort
+        answers:
+          - What is the retention rate over time (cohort analysis)?
+          - How does activation impact user retention?
+    description: >
+      Cohort-based subscription retention fact table. One row per
+      (cohort_month × months_since_cohort). Sourced from int_revenue__cohort_retention
+      which encapsulates the complex date arithmetic. Enriched with cohort size,
+      period labels, and SaaS benchmark comparisons. Best visualised as a retention
+      heatmap (cohort_month on Y axis, months_since_cohort on X axis, retention_rate
+      as cell value).
+    columns:
+      - name: cohort_month
+        data_type: string
+        description: Trial-start month in yyyyMM format (part of grain).
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: cohort_size
+        data_type: bigint
+        description: Number of users observed at month 0 for this cohort.
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression:"cohort_size > 0"
+      - name: months_since_cohort
+        data_type: bigint
+        description: Months elapsed since cohort_month (0–12, part of grain).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression:"months_since_cohort between 0 and 12"
+      - name: period_label
+        data_type: string
+        description: Human-readable label (e.g. 'Month 0 (start)', 'Month 3').
+        constraints:
+          - type: not_null
+      - name: total_users
+        data_type: bigint
+        description: Active users observed in this cohort at this time offset.
+        constraints:
+          - type: not_null
+      - name: retained_users
+        data_type: bigint
+        description: Users whose subscription effective_end_date covers the observation month.
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression:"retained_users <= total_users"
+      - name: retention_rate
+        data_type: decimal(10, 4)
+        description: Fraction of cohort retained at this offset (0–1).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression:"retention_rate between 0 and 1"
+      - name: cohort_size_bucket
+        data_type: string
+        description: Size bucket label for filtering comparable cohorts (xs / small / medium / large).
+        constraints:
+          - type: not_null
+      - name: retention_benchmark
+        data_type: decimal(10, 2)
+        description: SaaS benchmark for this offset (Month 0=1.0, 1–3=0.70, 4–6=0.50, 7–12=0.40).
+      - name: retention_vs_benchmark
+        data_type: decimal(10, 4)
+        description: retention_rate minus benchmark. Positive = above benchmark.
+      - name: activated_total_users
+        data_type: bigint
+        description: Users in this cohort who completed the activation event.
+        constraints:
+          - type: not_null
+      - name: activated_retained_users
+        data_type: bigint
+        description: Activated users still subscribed at this offset.
+        constraints:
+          - type: not_null
+      - name: activated_retention_rate
+        data_type: decimal(10, 4)
+        description: Retention rate for activated users (null if cohort has no activated users).
+      - name: non_activated_total_users
+        data_type: bigint
+        description: Users in this cohort who never completed the activation event.
+        constraints:
+          - type: not_null
+      - name: non_activated_retained_users
+        data_type: bigint
+        description: Non-activated users still subscribed at this offset.
+        constraints:
+          - type: not_null
+      - name: non_activated_retention_rate
+        data_type: decimal(10, 4)
+        description: Retention rate for non-activated users (null if all users activated).
+      - name: activation_retention_lift
+        data_type: decimal(10, 4)
+        description: >
+          activated_retention_rate minus non_activated_retention_rate.
+          Positive values show the retention benefit of activation.
+          Null when either split has no users.

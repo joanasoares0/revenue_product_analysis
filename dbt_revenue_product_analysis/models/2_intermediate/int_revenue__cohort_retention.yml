@@ -4,7 +4,9 @@ models:
   - name: int_revenue__cohort_retention
     description: >
       Cohort retention rates by (cohort_month × months_since_cohort). Encapsulates
-      complex date arithmetic on yyyyMM strings. Consumed by fct_cohort_retention.
+      complex date arithmetic on yyyyMM strings. Also splits each cohort by
+      activation status (users who completed the 'activated' event vs those who
+      did not) to support activation-impact analysis. Consumed by fct_cohort_retention.
     columns:
       - name: cohort_month
         description: Trial-start month in yyyyMM format.
@@ -27,4 +29,16 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "between 0 and 1"
+                expression: "retention_rate between 0 and 1"
+      - name: activated_total_users
+        description: Users in this cohort who completed the activation event.
+      - name: activated_retained_users
+        description: Activated users whose subscription covers the observation month.
+      - name: activated_retention_rate
+        description: Retention rate among activated users (null if none in cohort).
+      - name: non_activated_total_users
+        description: Users in this cohort who never completed the activation event.
+      - name: non_activated_retained_users
+        description: Non-activated users whose subscription covers the observation month.
+      - name: non_activated_retention_rate
+        description: Retention rate among non-activated users (null if none in cohort).

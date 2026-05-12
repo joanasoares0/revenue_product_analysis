@@ -11,23 +11,25 @@ with source as (
     select *
     from {{ source('revenue', 'events') }}
     {% if is_incremental() %}
-        where cast(event_at as date) > (select max(event_date) from {{ this }})
+        where
+            cast(event_at as date)
+            > (select max(event_date) from {{ this }}) -- noqa: AL03,RF02
     {% endif %}
 
 ),
- 
+
 cleaned as (
- 
+
     select
-        -- keys 
-        {{ dbt_utils.generate_surrogate_key(['event_id']) }} as sk_event_id, -- noqa: TMP,PRS
+        -- keys  -- noqa: LT02
+        {{ dbt_utils.generate_surrogate_key(['event_id']) }} as sk_event_id, -- noqa: TMP,PRS,LT02,LT05
         trim(event_id)              as event_id,
         trim(user_id)               as user_id,
         trim(session_id)            as session_id,
- 
-        -- event classification 
+
+        -- event classification
         lower(trim(replace(event_name, '_', ' ')))     as event_name,
- 
+
         case lower(trim(replace(event_name, '_', ' ')))
             when 'signed up'                then 1
             when 'email verified'           then 2
@@ -44,8 +46,8 @@ cleaned as (
             when 'cancellation initiated'   then 13
             else                                 999999
         end                                                 as funnel_stage_order,
- 
-        -- timestamps 
+
+        -- timestamps
         cast(event_at as date)                              as event_date,
         date_format(cast(event_at as date), 'yyyyMM')      as event_month,
 
@@ -61,8 +63,8 @@ cleaned as (
             'activated', 'feature core used',
             'feature advanced used', 'converted paid'
         )                                                   as is_funnel_event,
- 
-        -- JSON property extraction 
+
+        -- JSON property extraction
         lower(trim(cast(properties as string)))             as raw_properties,
         get_json_object(cast(properties as string), '$.source')             as event_source,
         get_json_object(cast(properties as string), '$.action')             as activation_action,
@@ -71,13 +73,13 @@ cleaned as (
         get_json_object(cast(properties as string), '$.to_plan')            as upgraded_to_plan,
         get_json_object(cast(properties as string), '$.reason')             as churn_reason,
 
-        -- audit 
+        -- audit
         current_timestamp()                                 as _stg_loaded_at
- 
+
     from source
-    where trim(event_id)   is not null
- 
+    where trim(event_id) is not null
+
 )
- 
-select * 
+
+select *
 from cleaned

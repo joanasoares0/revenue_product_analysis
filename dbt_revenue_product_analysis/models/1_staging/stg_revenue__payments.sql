@@ -11,32 +11,34 @@ with source as (
     select *
     from {{ source('revenue', 'payments') }}
     {% if is_incremental() %}
-        where cast(payment_date as date) > (select max(payment_date) from {{ this }})
+        where
+            cast(payment_date as date)
+            > (select max(payment_date) from {{ this }}) -- noqa: AL03,RF02
     {% endif %}
 
 ),
- 
+
 cleaned as (
- 
+
     select
-        -- keys
-        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id, -- noqa: TMP,PRS
+        -- keys  -- noqa: LT02
+        {{ dbt_utils.generate_surrogate_key(['payment_id']) }} as sk_payment_id, -- noqa: TMP,PRS,LT02,LT05
         trim(payment_id)        as payment_id,
         trim(subscription_id)   as subscription_id,
         trim(user_id)           as user_id,
         trim(plan_id)           as plan_id,
- 
-        -- attributes 
+
+        -- attributes
         lower(trim(billing_cycle))     as billing_cycle,
         upper(trim(currency))   as currency,
         lower(trim(status))            as status,
- 
+
         -- flags
         lower(trim(status)) = 'succeeded'  as is_revenue_recognised,
         lower(trim(status)) = 'failed'     as is_failed,
         lower(trim(status)) = 'refunded'   as is_refunded,
- 
-        -- metrics 
+
+        -- metrics
         cast(amount as decimal(10, 2))                      as amount,
         -- this metric is used to account for monthly input, even if billing cycle is annual (e.g. $1200 annual = $100 MRR)
         case lower(trim(billing_cycle))
@@ -44,25 +46,25 @@ cleaned as (
             when 'annual'  then round(cast(amount as decimal(10, 2)) / 12.0, 2)
             else                 cast(amount as decimal(10, 2))  -- fallback for unknown billing cycles
         end                                                 as mrr_contribution,
- 
-        -- timestamps 
+
+        -- timestamps
         cast(payment_date  as date)                         as payment_date,
         date_format(cast(payment_date as date), 'yyyyMM')  as payment_month,
         cast(period_start  as date)                         as period_start,
         cast(period_end    as date)                         as period_end,
- 
+
         datediff(
             DAY,
             cast(period_start as date),
             cast(period_end   as date)
         )                                                   as days_in_period,
- 
-        -- audit 
+
+        -- audit
         current_timestamp()                                 as _stg_loaded_at
- 
+
     from source
     where trim(payment_id) is not null
- 
+
 )
 
 select *

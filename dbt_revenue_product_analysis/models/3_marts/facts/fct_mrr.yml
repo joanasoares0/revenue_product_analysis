@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: fct_mrr
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: subscription_id × mrr_month
+        answers:
+          - How has MRR evolved over time? (sum mrr by mrr_month)
+          - What are the main drivers of revenue? (sum mrr by mrr_movement_type)
+          - What is the revenue churn rate? (sum churned_mrr / beginning_mrr by month)
+          - What is the LTV? (sum mrr per user over their active months)
+          - Are there seasonality patterns? (group by mrr_month, compare YoY)
+    description: >
+      MRR periodic snapshot fact table — the central SaaS revenue metric table.
+      One row per (subscription_id × mrr_month) for every month a subscription was
+      active, plus one synthetic 'churned' row for the month after cancellation.
+      Generated via dbt_utils.date_spine to ensure gapless month coverage.
+
+      mrr_movement_type classifies each record for waterfall analysis:
+        new         — first-ever month for this user
+        expansion   — higher MRR than the previous month (upgrade)
+        contraction — lower MRR than the previous month (downgrade)
+        reactivation— returned after a gap of > 1 month
+        retained    — same MRR, continuous subscription
+        churned     — synthetic end row (MRR set to the lost amount, mrr_delta negative)
+
+      Query pattern for MRR waterfall by month:
+        SELECT mrr_month,
+               SUM(CASE WHEN mrr_movement_type = 'new'         THEN mrr       ELSE 0 END) AS new_mrr,
+               SUM(CASE WHEN mrr_movement_type = 'expansion'   THEN mrr_delta ELSE 0 END) AS expansion_mrr,
+               SUM(CASE WHEN mrr_movement_type = 'contraction' THEN mrr_delta ELSE 0 END) AS contraction_mrr,
+               SUM(CASE WHEN mrr_movement_type = 'churned'     THEN mrr       ELSE 0 END) AS churned_mrr
+        FROM fct_mrr
+        GROUP BY mrr_month
+    columns:
+      - name: sk_mrr_id
+        data_type: string
+        description: Surrogate key (subscription_id + mrr_month hash; '_churn' suffix for churn rows).
+        constraints:
+          - type: not_null
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: subscription_id
+        data_type: string
+        description: Natural FK — source subscription identifier.
+        constraints:
+          - type: not_null
+      - name: sk_subscription_id
+        data_type: string
+        description: FK → fct_subscriptions.sk_subscription_id.
+      - name: user_id
+        data_type: string
+        description: Natural FK — source user identifier (use for LAG/LEAD user-level analysis).
+        constraints:
+          - type: not_null
+      - name: sk_user_id
+        data_type: string
+        description: FK → dim_users.sk_user_id.
+      - name: plan_id
+        data_type: string
+        description: Natural FK — source plan identifier.
+      - name: sk_plan_id
+        data_type: string
+        description: FK → dim_plans.sk_plan_id.
+      - name: mrr_month
+        data_type: string
+        description: Active month in yyyyMM format (part of grain).
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: mrr
+        data_type: decimal(10, 2)
+        description: Monthly recurring revenue for this subscription in this month.
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "mrr >= 0"
+      - name: billing_cycle
+        data_type: string
+        description: Billing frequency (monthly / annual).
+      - name: cohort_month
+        data_type: string
+        description: Trial-start month in yyyyMM format — links back to the cohort.
+      - name: is_spike_churn
+        data_type: boolean
+        description: True if this subscription was cancelled during the Jul–Dec 2023 pricing event.
+        constraints:
+          - type: not_null
+      - name: prev_mrr
+        data_type: decimal(10, 2)
+        description: MRR from the previous month for this user (null for new subscribers).
+      - name: mrr_movement_type
+        data_type: string
+        description: Classification of the MRR change (new / expansion / contraction / reactivation / retained / churned).
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['new', 'expansion', 'contraction', 'reactivation', 'retained', 'churned']
+      - name: mrr_delta
+        data_type: decimal(10, 2)
+        description: >
+          Change in MRR vs prior month. Positive for expansion; negative for contraction
+          and churn rows; 0 for retained; equals mrr for new and reactivation.
+        constraints:
+          - type: not_null

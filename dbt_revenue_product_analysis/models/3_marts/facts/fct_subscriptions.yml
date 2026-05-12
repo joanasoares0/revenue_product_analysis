@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: fct_subscriptions
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: subscription_id
+        answers:
+          - What is the revenue churn rate? (count is_churned / total subscriptions)
+          - What is the customer lifetime value? (sum mrr × subscription_duration_days / 30)
+          - Which segments have the longest subscriptions? (join dim_users, avg subscription_duration_days)
+    description: >
+      Subscription accumulating snapshot fact table. One row per subscription_id,
+      spanning the full lifecycle from trial start to cancellation (or current date
+      if active). Milestones are populated as they occur: trial_start_date → trial_end_date
+      → subscription_start_date → subscription_end_date / cancelled_date.
+      Use effective_end_date (sentinel 2099-12-31 for active) for range queries.
+      Source of truth for fct_mrr periodic snapshot.
+    columns:
+      - name: sk_subscription_id
+        data_type: string
+        description: Surrogate key.
+        constraints:
+          - type: not_null
+          - type: primary_key
+        data_tests:
+          - unique
+          - not_null
+      - name: subscription_id
+        data_type: string
+        description: Natural key — source system subscription identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+      - name: sk_user_id
+        data_type: string
+        description: FK → dim_users.sk_user_id.
+      - name: sk_plan_id
+        data_type: string
+        description: FK → dim_plans.sk_plan_id.
+      - name: user_id
+        data_type: string
+        description: Natural FK — source user identifier.
+        constraints:
+          - type: not_null
+      - name: plan_id
+        data_type: string
+        description: Natural FK — source plan identifier.
+      - name: billing_cycle
+        data_type: string
+        description: Billing frequency (monthly / annual).
+      - name: status
+        data_type: string
+        description: Current subscription status (active / cancelled / trial expired).
+      - name: cancel_reason
+        data_type: string
+        description: Normalised cancellation reason (default 'not cancelled' if active).
+      - name: cohort_month
+        data_type: string
+        description: Trial-start month in yyyyMM format — cohort identifier.
+      - name: is_active
+        data_type: boolean
+        description: True if the subscription is currently active.
+        constraints:
+          - type: not_null
+      - name: is_churned
+        data_type: boolean
+        description: True if the subscription has been cancelled.
+        constraints:
+          - type: not_null
+      - name: is_trial_expired
+        data_type: boolean
+        description: True if the trial period expired without conversion.
+        constraints:
+          - type: not_null
+      - name: is_spike_churn
+        data_type: boolean
+        description: True if this cancellation occurred during the Jul–Dec 2023 pricing event window.
+        constraints:
+          - type: not_null
+      - name: mrr
+        data_type: decimal(10, 2)
+        description: Monthly recurring revenue value for this subscription.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "mrr >= 0"
+      - name: trial_duration_days
+        data_type: int
+        description: Duration of the trial period in days.
+      - name: subscription_duration_days
+        data_type: int
+        description: Duration of the paid subscription in days (null if not yet started).
+      - name: trial_start_date
+        data_type: date
+        description: Milestone 1 — date the trial began.
+      - name: trial_end_date
+        data_type: date
+        description: Milestone 2 — date the trial ended.
+      - name: subscription_start_date
+        data_type: date
+        description: Milestone 3 — date the paid subscription started.
+      - name: subscription_end_date
+        data_type: date
+        description: Milestone 4 — date the subscription ended or was cancelled (null if active).
+      - name: cancelled_date
+        data_type: date
+        description: Milestone 4b — explicit cancellation date (may differ from subscription_end_date).
+      - name: effective_end_date
+        data_type: date
+        description: Subscription end date or '2099-12-31' sentinel for active subscriptions. Use for range queries.
+        constraints:
+          - type: not_null
+      - name: _stg_loaded_at
+        data_type: timestamp
+        description: Audit timestamp.
+        constraints:
+          - type: not_null
