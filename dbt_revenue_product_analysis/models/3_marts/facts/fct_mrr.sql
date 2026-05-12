@@ -29,7 +29,7 @@ date_spine as ( -- noqa: disable=TMP
 
     {{ dbt_utils.date_spine(
         datepart   = "month",
-        start_date = "cast('{{ var(\"reporting_start_date\", \"2022-01-01\") }}' as date)",
+        start_date = "cast('" ~ var('reporting_start_date', '2022-01-01') ~ "' as date)",
         end_date   = "add_months(date_trunc('month', current_date()), 1)"
     ) }}
 
