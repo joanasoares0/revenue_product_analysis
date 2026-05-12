@@ -1,0 +1,57 @@
+# CI Cleanup — runs when a PR targeting main is closed (merged or dismissed).
+#
+# Drops all schemas in ci_revenue_product_analysis that belong to this PR
+# (any schema matching pr_<number>__*), regardless of how many commits were
+# pushed during the PR's lifetime.
+#
+# Required GitHub Secrets (same as CI):
+#   DB_HOST_CI      — Databricks workspace hostname
+#   DB_HTTP_PATH_CI — HTTP path of the CI SQL warehouse
+#   DB_TOKEN_CI     — Access token for CI
+
+name: CI Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./dbt_revenue_product_analysis
+
+    env:
+      DB_HOST_CI: ${{ secrets.DB_HOST_CI }}
+      DB_HTTP_PATH_CI: ${{ secrets.DB_HTTP_PATH_CI }}
+      DB_TOKEN_CI: ${{ secrets.DB_TOKEN_CI }}
+      SCHEMA_PREFIX: PR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: dbt deps
+        run: |
+          dbt deps --target ci --profiles-dir . --vars "schema_id: cleanup"
+
+      - name: Drop PR schemas
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          dbt run-operation drop_ci_schemas \
+            --args "{'pr_number': '$PR_NUMBER'}" \
+            --target ci \
+            --profiles-dir . \
+            --vars "schema_id: cleanup"
