@@ -52,7 +52,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"tier between 1 and 4"
+                expression: "tier between 1 and 4"
       - name: max_seats
         data_type: int
         description: Maximum number of seats allowed on this plan.
@@ -69,7 +69,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"monthly_price > 0"
+                expression: "monthly_price > 0"
       - name: annual_price
         data_type: decimal(10, 2)
         description: List price for annual billing (USD).
@@ -78,7 +78,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"annual_price > 0"
+                expression: "annual_price > 0"
       - name: annual_monthly_equivalent
         data_type: decimal(10, 2)
         description: Effective monthly cost when billed annually (annual_price / 12).

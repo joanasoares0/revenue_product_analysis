@@ -29,7 +29,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "retention_rate between 0 and 1"
+                expression: "between 0 and 1"
       - name: activated_total_users
         description: Users in this cohort who completed the activation event.
       - name: activated_retained_users
