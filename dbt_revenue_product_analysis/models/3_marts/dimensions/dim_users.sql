@@ -4,7 +4,6 @@ Grain: one row per user_id.
 #}
 
 
-
 select
     -- keys
     sk_user_id,
