@@ -35,7 +35,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"cohort_size > 0"
+                expression: "> 0"
       - name: months_since_cohort
         data_type: bigint
         description: Months elapsed since cohort_month (0–12, part of grain).
@@ -44,7 +44,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"months_since_cohort between 0 and 12"
+                expression: "between 0 and 12"
       - name: period_label
         data_type: string
         description: Human-readable label (e.g. 'Month 0 (start)', 'Month 3').
@@ -63,7 +63,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"retained_users <= total_users"
+                expression: "<= total_users"
       - name: retention_rate
         data_type: decimal(10, 4)
         description: Fraction of cohort retained at this offset (0–1).
@@ -72,7 +72,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression:"retention_rate between 0 and 1"
+                expression: "between 0 and 1"
       - name: cohort_size_bucket
         data_type: string
         description: Size bucket label for filtering comparable cohorts (xs / small / medium / large).

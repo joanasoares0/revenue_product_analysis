@@ -84,7 +84,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "mrr >= 0"
+                expression: ">= 0"
       - name: billing_cycle
         data_type: string
         description: Billing frequency (monthly / annual).

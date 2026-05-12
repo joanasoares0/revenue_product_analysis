@@ -90,7 +90,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "amount >= 0"
+                expression: ">= 0"
       - name: mrr_contribution
         data_type: decimal(10, 2)
         description: >
