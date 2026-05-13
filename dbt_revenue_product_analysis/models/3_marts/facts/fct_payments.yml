@@ -26,6 +26,7 @@ models:
         constraints:
           - type: not_null
           - type: primary_key
+            name: pk_fct_payments
         data_tests:
           - unique
           - not_null

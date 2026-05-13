@@ -44,6 +44,7 @@ models:
         constraints:
           - type: not_null
           - type: primary_key
+            name: pk_fct_user_funnel
         data_tests:
           - unique
           - not_null
@@ -68,7 +69,7 @@ models:
         data_type: string
         description: User's country.
       - name: signed_up_at
-        data_type: timestamp
+        data_type: date
         description: Original signup timestamp from dim_users.
       - name: signup_month
         data_type: string
@@ -97,7 +98,7 @@ models:
         data_type: date
         description: Date of first 'converted paid' event (null if user never converted).
       - name: highest_funnel_stage_order
-        data_type: bigint
+        data_type: int
         description: Numeric order of the deepest funnel stage the user reached.
       - name: highest_funnel_stage_name
         data_type: string
@@ -128,13 +129,13 @@ models:
         constraints:
           - type: not_null
       - name: days_to_email_verified
-        data_type: bigint
+        data_type: int
         description: Days from signup to first email verification (null if not reached).
       - name: days_to_activation
-        data_type: bigint
+        data_type: int
         description: Days from signup to first activation event (null if not reached).
       - name: days_to_conversion
-        data_type: bigint
+        data_type: int
         description: Days from signup to first paid conversion event (null if not reached).
       - name: has_paid_subscription
         data_type: boolean
