@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: dim_plans
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: plan_id
+    description: >
+      Plan dimension table. One row per plan, loaded from the plans seed via staging.
+      Contains pricing, tier, and feature attributes. Includes derived
+      annual_discount_pct to expose pricing strategy. Join to fct_payments and
+      fct_subscriptions via sk_plan_id.
+    columns:
+      - name: sk_plan_id
+        data_type: string
+        description: Surrogate key — use as FK in fact tables.
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_plans
+        data_tests:
+          - unique
+          - not_null
+      - name: plan_id
+        data_type: string
+        description: Natural key — source system plan identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - plan_starter
+                  - plan_growth
+                  - plan_scale
+                  - plan_enterprise
+      - name: plan_name
+        data_type: string
+        description: Display name of the plan (normalised lowercase).
+        constraints:
+          - type: not_null
+      - name: tier
+        data_type: int
+        description: Numeric tier level (1 = entry, 4 = enterprise).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "between 1 and 4"
+      - name: max_seats
+        data_type: int
+        description: Maximum number of seats allowed on this plan.
+        constraints:
+          - type: not_null
+      - name: features
+        data_type: string
+        description: Comma-separated list of features included in this plan.
+      - name: monthly_price
+        data_type: decimal(10, 2)
+        description: List price for monthly billing (USD).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+      - name: annual_price
+        data_type: decimal(10, 2)
+        description: List price for annual billing (USD).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
+      - name: annual_monthly_equivalent
+        data_type: decimal(10, 2)
+        description: Effective monthly cost when billed annually (annual_price / 12).
+        constraints:
+          - type: not_null
+      - name: annual_discount_pct
+        data_type: decimal(10, 1)
+        description: Discount percentage offered by annual vs monthly billing (positive = discount).
+      - name: _stg_loaded_at
+        data_type: timestamp
+        description: Audit — timestamp when the record was loaded into staging.
+        constraints:
+          - type: not_null

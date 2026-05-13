@@ -1,0 +1,161 @@
+version: 2
+
+models:
+  - name: fct_user_funnel
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: user_id
+        answers:
+          - What is the conversion rate at each funnel stage? (count users by highest_funnel_stage_name)
+          - Where are the biggest drop-offs? (compare distinct_funnel_stages_reached distributions)
+          - How long does it take to activate? (avg/p50 days_to_activation)
+          - What differentiates converters vs non-converters? (filter has_converted, slice by acquisition_channel / company_size / industry)
+          - Which acquisition channels convert best? (group by acquisition_channel, rate of has_converted)
+    description: >
+      User-level funnel accumulating snapshot. One row per user_id.
+      Tracks each user's highest funnel stage reached, activation, and conversion,
+      plus time-to-milestone metrics (days from signup to each key event).
+      User segment attributes (acquisition_channel, company_size, industry, country)
+      are denormalised from dim_users to allow self-serve slicing without extra joins.
+
+      Query pattern — funnel drop-off by stage:
+        SELECT highest_funnel_stage_name,
+               COUNT(*)                          AS users_reached,
+               COUNT(*) FILTER (WHERE has_converted) AS converted
+        FROM fct_user_funnel
+        GROUP BY highest_funnel_stage_order, highest_funnel_stage_name
+        ORDER BY highest_funnel_stage_order
+
+      Query pattern — activation impact on conversion:
+        SELECT has_activated,
+               COUNT(*)                               AS total_users,
+               AVG(CAST(has_converted AS INT))        AS conversion_rate,
+               AVG(days_to_conversion)                AS avg_days_to_conversion
+        FROM fct_user_funnel
+        GROUP BY has_activated
+    columns:
+      - name: sk_user_id
+        data_type: string
+        description: Surrogate key — FK → dim_users.sk_user_id.
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_fct_user_funnel
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        data_type: string
+        description: Natural key — source user identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+      - name: acquisition_channel
+        data_type: string
+        description: Channel through which the user was acquired.
+      - name: company_size
+        data_type: string
+        description: Company size bucket (micro / small / medium / large / unknown).
+      - name: industry
+        data_type: string
+        description: User's industry vertical.
+      - name: country
+        data_type: string
+        description: User's country.
+      - name: signed_up_at
+        data_type: date
+        description: Original signup timestamp from dim_users.
+      - name: signup_month
+        data_type: string
+        description: Signup month in yyyyMM format.
+      - name: signed_up_date
+        data_type: date
+        description: Date of first 'signed up' event; falls back to signed_up_at if event is missing.
+        constraints:
+          - type: not_null
+      - name: email_verified_date
+        data_type: date
+        description: Date of first 'email verified' event (null if not reached).
+      - name: trial_started_date
+        data_type: date
+        description: Date of first 'trial started' event (null if not reached).
+      - name: onboarding_step1_date
+        data_type: date
+        description: Date of first 'onboarding step1' event (null if not reached).
+      - name: onboarding_step2_date
+        data_type: date
+        description: Date of first 'onboarding step2' event (null if not reached).
+      - name: activated_date
+        data_type: date
+        description: Date of first activation event (null if user never activated).
+      - name: converted_date
+        data_type: date
+        description: Date of first 'converted paid' event (null if user never converted).
+      - name: highest_funnel_stage_order
+        data_type: int
+        description: Numeric order of the deepest funnel stage the user reached.
+      - name: highest_funnel_stage_name
+        data_type: string
+        description: Event name of the deepest funnel stage reached.
+      - name: distinct_funnel_stages_reached
+        data_type: bigint
+        description: Number of distinct funnel stages the user completed.
+        constraints:
+          - type: not_null
+      - name: has_verified_email
+        data_type: boolean
+        description: True if the user completed email verification.
+        constraints:
+          - type: not_null
+      - name: has_started_trial
+        data_type: boolean
+        description: True if the user started a trial.
+        constraints:
+          - type: not_null
+      - name: has_activated
+        data_type: boolean
+        description: True if the user completed the activation event.
+        constraints:
+          - type: not_null
+      - name: has_converted
+        data_type: boolean
+        description: True if the user completed the 'converted paid' event.
+        constraints:
+          - type: not_null
+      - name: days_to_email_verified
+        data_type: int
+        description: Days from signup to first email verification (null if not reached).
+      - name: days_to_activation
+        data_type: int
+        description: Days from signup to first activation event (null if not reached).
+      - name: days_to_conversion
+        data_type: int
+        description: Days from signup to first paid conversion event (null if not reached).
+      - name: has_paid_subscription
+        data_type: boolean
+        description: True if the user has at least one active paid subscription.
+        constraints:
+          - type: not_null
+      - name: has_churned
+        data_type: boolean
+        description: True if any of the user's subscriptions was cancelled.
+        constraints:
+          - type: not_null
+      - name: current_mrr
+        data_type: decimal(10, 2)
+        description: MRR from the user's most recently started subscription (null if no subscription).
+      - name: max_subscription_duration_days
+        data_type: bigint
+        description: Duration in days of the user's longest paid subscription.
+      - name: first_subscription_start_date
+        data_type: date
+        description: Date of the user's first paid subscription start.
+      - name: last_cancel_reason
+        data_type: string
+        description: Cancellation reason from the user's most recently cancelled subscription (null if never cancelled).

@@ -1,0 +1,148 @@
+version: 2
+
+models:
+  - name: fct_events
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: event_id
+        answers:
+          - What is the conversion rate at each funnel stage? (count distinct user_id where is_funnel_event, group by funnel_stage_order)
+          - Where are the biggest drop-offs? (compare user counts between consecutive funnel_stage_order values)
+          - How long does it take users to reach activation? (MIN(event_date) where is_activation_event per user, diff from dim_users.signed_up_at)
+          - Which user actions are most correlated with conversion? (pivot feature_used against is_conversion_event)
+    description: >
+      User event transactional fact table. One row per event_id. Contains all product
+      events with FK to dim_users. Use is_funnel_event to scope to the core conversion
+      funnel. funnel_stage_order enables ordering and gap analysis. JSON-extracted
+      properties (feature_used, churn_reason, etc.) are available as first-class columns.
+    columns:
+      - name: sk_event_id
+        data_type: string
+        description: Surrogate key.
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_fct_events
+        data_tests:
+          - unique
+          - not_null
+      - name: event_id
+        data_type: string
+        description: Natural key — source system event identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+      - name: sk_user_id
+        data_type: string
+        description: FK → dim_users.sk_user_id.
+      - name: user_id
+        data_type: string
+        description: Natural FK — source user identifier.
+        constraints:
+          - type: not_null
+      - name: session_id
+        data_type: string
+        description: Session identifier (degenerate dimension).
+      - name: event_name
+        data_type: string
+        description: Normalised event name (lowercase, underscores replaced with spaces).
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              config:
+                severity: warn
+              arguments:
+                values:
+                  - signed up
+                  - email verified
+                  - trial started
+                  - onboarding step1
+                  - onboarding step2
+                  - activated
+                  - feature core used
+                  - feature advanced used
+                  - invited team member
+                  - converted paid
+                  - upgraded plan
+                  - payment failed
+                  - cancellation initiated
+      - name: funnel_stage_order
+        data_type: int
+        description: Numeric order of the funnel stage (1=signed up → 13=cancellation; 999999=unknown).
+        constraints:
+          - type: not_null
+      - name: is_funnel_event
+        data_type: boolean
+        description: True for events in the core conversion funnel (stages 1–10).
+        constraints:
+          - type: not_null
+      - name: is_activation_event
+        data_type: boolean
+        description: True for the 'activated' event.
+        constraints:
+          - type: not_null
+      - name: is_conversion_event
+        data_type: boolean
+        description: True for the 'converted paid' event.
+        constraints:
+          - type: not_null
+      - name: is_upsell_event
+        data_type: boolean
+        description: True for the 'upgraded plan' event.
+        constraints:
+          - type: not_null
+      - name: is_payment_failure_event
+        data_type: boolean
+        description: True for the 'payment failed' event.
+        constraints:
+          - type: not_null
+      - name: is_churn
+        data_type: boolean
+        description: True for the 'cancellation initiated' event.
+        constraints:
+          - type: not_null
+      - name: event_source
+        data_type: string
+        description: Source extracted from event properties JSON.
+      - name: activation_action
+        data_type: string
+        description: Specific action that triggered activation (from JSON properties).
+      - name: feature_used
+        data_type: string
+        description: Feature name extracted from feature-usage events (from JSON properties).
+      - name: upgraded_from_plan
+        data_type: string
+        description: Plan ID the user upgraded from (from JSON properties).
+      - name: upgraded_to_plan
+        data_type: string
+        description: Plan ID the user upgraded to (from JSON properties).
+      - name: churn_reason
+        data_type: string
+        description: Self-reported churn reason (from JSON properties on cancellation events).
+      - name: raw_properties
+        data_type: string
+        description: Full JSON properties string (normalised lowercase).
+      - name: event_date
+        data_type: date
+        description: Date the event occurred.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: event_month
+        data_type: string
+        description: Event month in yyyyMM format.
+        constraints:
+          - type: not_null
+      - name: _stg_loaded_at
+        data_type: timestamp
+        description: Audit timestamp.
+        constraints:
+          - type: not_null

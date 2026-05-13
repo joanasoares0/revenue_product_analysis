@@ -1,0 +1,123 @@
+version: 2
+
+models:
+  - name: fct_payments
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: payment_id
+        answers:
+          - How has revenue evolved over time? (aggregate by payment_month)
+          - Which segments generate the most revenue? (join dim_users, group by company_size / industry)
+          - What is the ARPU? (sum(amount) / count(distinct user_id), filter is_revenue_recognised)
+          - Are there seasonality patterns? (group by payment_month, compare YoY)
+    description: >
+      Payment transactional fact table. One row per payment_id. Covers all payment
+      statuses (succeeded, failed, refunded). Filter on is_revenue_recognised = true
+      for revenue metrics. Join dim_users for segment analysis, dim_plans for plan-level
+      revenue breakdown. mrr_contribution normalises annual payments to monthly equivalents.
+    columns:
+      - name: sk_payment_id
+        data_type: string
+        description: Surrogate key.
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_fct_payments
+        data_tests:
+          - unique
+          - not_null
+      - name: payment_id
+        data_type: string
+        description: Natural key — source system payment identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+      - name: sk_user_id
+        data_type: string
+        description: FK → dim_users.sk_user_id.
+      - name: sk_plan_id
+        data_type: string
+        description: FK → dim_plans.sk_plan_id.
+      - name: user_id
+        data_type: string
+        description: Natural FK — source user identifier.
+        constraints:
+          - type: not_null
+      - name: plan_id
+        data_type: string
+        description: Natural FK — source plan identifier.
+      - name: subscription_id
+        data_type: string
+        description: Associated subscription identifier (degenerate dimension).
+      - name: billing_cycle
+        data_type: string
+        description: Billing frequency (monthly / annual).
+      - name: currency
+        data_type: string
+        description: ISO 4217 currency code (uppercase).
+      - name: status
+        data_type: string
+        description: Payment status (succeeded / failed / refunded).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['succeeded', 'failed', 'refunded']
+      - name: is_revenue_recognised
+        data_type: boolean
+        description: True when status = succeeded. Use this flag for all revenue metrics.
+        constraints:
+          - type: not_null
+      - name: is_failed
+        data_type: boolean
+        description: True when status = failed.
+        constraints:
+          - type: not_null
+      - name: is_refunded
+        data_type: boolean
+        description: True when status = refunded.
+        constraints:
+          - type: not_null
+      - name: amount
+        data_type: decimal(10, 2)
+        description: Raw payment amount charged (full annual amount for annual billing).
+        constraints:
+          - type: not_null
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: mrr_contribution
+        data_type: decimal(10, 2)
+        description: >
+          Normalised monthly amount. Monthly payments = amount; annual payments =
+          amount / 12. Use this for MRR calculations instead of amount.
+      - name: payment_date
+        data_type: date
+        description: Date the payment was processed.
+        constraints:
+          - type: not_null
+      - name: payment_month
+        data_type: string
+        description: Payment month in yyyyMM format (date key for time-series queries).
+        constraints:
+          - type: not_null
+      - name: period_start
+        data_type: date
+        description: Start of the billing period covered by this payment.
+      - name: period_end
+        data_type: date
+        description: End of the billing period covered by this payment.
+      - name: days_in_period
+        data_type: bigint
+        description: Number of days in the billing period.
+      - name: _stg_loaded_at
+        data_type: timestamp
+        description: Audit timestamp.
+        constraints:
+          - type: not_null

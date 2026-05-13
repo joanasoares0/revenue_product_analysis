@@ -1,6 +1,19 @@
-dbt_packages/
-dbt_internal_packages/
-logs/
+# dbt artifacts
 target/
-.env
+dbt_packages/
+logs/
 .user.yml
+
+# Credentials
+profiles.yml
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+dbt_internal_packages/

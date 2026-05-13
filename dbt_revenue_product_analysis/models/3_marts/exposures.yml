@@ -1,0 +1,58 @@
+version: 2
+
+exposures:
+
+  - name: revenue_dashboard
+    label: Revenue Dashboard
+    type: dashboard
+    maturity: high
+    description: >
+      Executive revenue dashboard. Powered by fct_payments joined to dim_users and
+      dim_plans for segment breakdown, and fct_mrr for waterfall and churn analysis.
+      Refreshed daily.
+    depends_on:
+      - ref('fct_payments')
+      - ref('fct_mrr')
+      - ref('dim_users')
+      - ref('dim_plans')
+    owner:
+      name: Analytics Engineering
+      email: analytics@company.com
+
+  - name: product_funnel_dashboard
+    label: Product Funnel & Retention Dashboard
+    type: dashboard
+    maturity: high
+    description: >
+      Product analytics dashboard. Uses fct_events for funnel stage analysis and
+      drop-off identification, fct_subscriptions joined to dim_users for cohort
+      retention, and fct_mrr for LTV by cohort.
+    depends_on:
+      - ref('fct_events')
+      - ref('fct_subscriptions')
+      - ref('fct_mrr')
+      - ref('fct_cohort_retention')
+      - ref('fct_user_funnel')
+      - ref('dim_users')
+    owner:
+      name: Analytics Engineering
+      email: analytics@company.com
+
+  - name: self_serve_exploration
+    label: Self-Serve Data Explorer
+    type: application
+    maturity: medium
+    description: >
+      Ad-hoc exploration tool for product and growth teams. All four fact tables
+      and both dimensions are exposed, allowing teams to answer custom questions
+      without writing SQL.
+    depends_on:
+      - ref('fct_payments')
+      - ref('fct_subscriptions')
+      - ref('fct_mrr')
+      - ref('fct_events')
+      - ref('dim_users')
+      - ref('dim_plans')
+    owner:
+      name: Analytics Engineering
+      email: analytics@company.com

@@ -1,6 +1,6 @@
 with source as (
 
-    select * 
+    select *
     from {{ ref('plans') }}
 
 ),
@@ -8,11 +8,11 @@ with source as (
 cleaned as (
 
     select
-        -- keys 
-        {{ dbt_utils.generate_surrogate_key(['plan_id']) }} as sk_plan_id, -- noqa: TMP,PRS
+        -- keys  -- noqa: LT02
+        {{ dbt_utils.generate_surrogate_key(['plan_id']) }} as sk_plan_id, -- noqa: TMP,PRS,LT02,LT05
         trim(plan_id)                                       as plan_id,
 
-        -- attributes 
+        -- attributes
         lower(trim(plan_name))                              as plan_name,
         cast(monthly_price as decimal(10, 2))               as monthly_price,
         cast(annual_price as decimal(10, 2))                as annual_price,
@@ -20,7 +20,7 @@ cleaned as (
         cast(max_seats as int)                              as max_seats,
         lower(trim(features))                               as features,
 
-        -- audit 
+        -- audit
         current_timestamp()                                 as _stg_loaded_at
 
     from source
@@ -28,5 +28,5 @@ cleaned as (
 
 )
 
-select * 
+select *
 from cleaned

@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: dim_users
+    config:
+      contract:
+        enforced: true
+      meta:
+        owner: analytics_engineering
+        refresh: daily
+        grain: user_id
+    description: >
+      User dimension table. One row per user, including all descriptive attributes
+      for slicing and filtering. Includes soft-deleted users (filter is_deleted = 0
+      for the active population). No metrics — join to fct_payments, fct_subscriptions,
+      or fct_events for revenue and behaviour metrics.
+    columns:
+      - name: sk_user_id
+        data_type: string
+        description: Surrogate key — use as FK in fact tables.
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_users
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        data_type: string
+        description: Natural key — source system user identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
+      - name: company_name
+        data_type: string
+        description: Company name (uppercase, trimmed).
+      - name: company_size
+        data_type: string
+        description: Company size category (micro, small, medium, large, unknown).
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              config:
+                severity: warn
+              arguments:
+                values: ['micro', 'small', 'medium', 'large', 'unknown']
+      - name: company_size_order
+        data_type: int
+        description: Natural sort order for company size (0=unknown, 1=micro, 2=small, 3=medium, 4=large).
+        constraints:
+          - type: not_null
+      - name: industry
+        data_type: string
+        description: Industry sector (normalised lowercase).
+        constraints:
+          - type: not_null
+      - name: acquisition_channel
+        data_type: string
+        description: Marketing channel through which this user was acquired (normalised lowercase, spaces as underscores).
+        constraints:
+          - type: not_null
+      - name: country
+        data_type: string
+        description: Two-letter ISO 3166-1 alpha-2 country code (uppercase).
+      - name: signed_up_at
+        data_type: date
+        description: Date the user first signed up.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: signup_month
+        data_type: string
+        description: Month of signup in yyyyMM format — useful for cohort grouping.
+        constraints:
+          - type: not_null
+      - name: is_deleted
+        data_type: int
+        description: Soft-delete flag (0 = active, 1 = deleted, 999999 = unknown).
+        constraints:
+          - type: not_null
+      - name: _stg_loaded_at
+        data_type: timestamp
+        description: Audit — timestamp when the record was loaded into staging.
+        constraints:
+          - type: not_null
