@@ -3,7 +3,7 @@ dbt_revenue_product_analysis:
   outputs:
     dev:
       type: databricks
-      database: revenue_product_analysis
+      database: dev
       schema: dev
       host: "{{ env_var('DB_HOST_DEV') }}"
       http_path: "{{ env_var('DB_HTTP_PATH_DEV') }}"
@@ -12,16 +12,16 @@ dbt_revenue_product_analysis:
 
     ci:
       type: databricks
-      database: ci_revenue_product_analysis
-      schema: "{{ env_var('SCHEMA_PREFIX', 'PR') }}_{{ var('schema_id') }}"
-      host: "{{ env_var('DB_HOST_CI') }}"
-      http_path: "{{ env_var('DB_HTTP_PATH_CI') }}"
-      token: "{{ env_var('DB_TOKEN_CI') }}"
+      database: dev
+      schema: "ci_{{ env_var('SCHEMA_PREFIX', 'pr') }}_{{ var('schema_id') }}"
+      host: "{{ env_var('DB_HOST_DEV') }}"
+      http_path: "{{ env_var('DB_HTTP_PATH_DEV') }}"
+      token: "{{ env_var('DB_TOKEN_DEV') }}"
       threads: 16
 
     prod:
       type: databricks
-      database: prod_revenue_product_analysis
+      database: prod
       schema: prod
       host: "{{ env_var('DB_HOST_PROD') }}"
       http_path: "{{ env_var('DB_HTTP_PATH_PROD') }}"

@@ -43,12 +43,30 @@ models:
                   - cancellation initiated
       - name: funnel_stage_order
         description: Numeric order for funnel stages based on event name.
-      - name: is_activation_event
-        description: Flag indicating if this is an activation event.
-      - name: is_conversion_event
-        description: Flag indicating if this is a conversion event.
       - name: is_funnel_event
         description: Flag indicating if this event is part of the core funnel.
+        data_tests:
+          - not_null
+      - name: is_activation_event
+        description: Flag indicating if this is an activation event.
+        data_tests:
+          - not_null
+      - name: is_conversion_event
+        description: Flag indicating if this is a conversion event.
+        data_tests:
+          - not_null
+      - name: is_upsell_event
+        description: Flag indicating if this is an upgrade event.
+        data_tests:
+          - not_null
+      - name: is_payment_failure_event
+        description: Flag indicating if this is a payment failure event.
+        data_tests:
+          - not_null
+      - name: is_churn
+        description: Flag indicating if this is a cancellation initiation event.
+        data_tests:
+          - not_null
       - name: event_source
         description: Source extracted from event properties JSON.
       - name: activation_action

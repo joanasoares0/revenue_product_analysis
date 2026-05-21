@@ -131,12 +131,30 @@ models:
       - name: days_to_email_verified
         data_type: int
         description: Days from signup to first email verification (null if not reached).
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                where: days_to_email_verified is not null
       - name: days_to_activation
         data_type: int
         description: Days from signup to first activation event (null if not reached).
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                where: days_to_activation is not null
       - name: days_to_conversion
         data_type: int
         description: Days from signup to first paid conversion event (null if not reached).
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                where: days_to_conversion is not null
       - name: has_paid_subscription
         data_type: boolean
         description: True if the user has at least one active paid subscription.

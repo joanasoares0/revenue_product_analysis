@@ -1,18 +1,27 @@
 {#
 User event transactional fact table.
 Grain: one row per event_id.
-Contains all product events with FK reference to dim_users.
 Filter on is_funnel_event for funnel analysis;
 use funnel_stage_order for ordering;
 use is_activation_event / is_conversion_event for milestone analysis.
-
 #}
 
+{{
+    config(
+        materialized         = 'incremental',
+        unique_key           = 'sk_event_id',
+        incremental_strategy = 'merge'
+    )
+}}
 
 with events as (
 
     select *
     from {{ ref('stg_revenue__events') }}
+    {% if is_incremental() %}
+        -- 3-day lookback handles late-arriving events without reprocessing full history
+        where event_date >= (select date_sub(max(t.event_date), 3) as max_date from {{ this }} as t)
+    {% endif %}
 
 ),
 

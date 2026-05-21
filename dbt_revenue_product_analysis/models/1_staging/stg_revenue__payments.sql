@@ -1,20 +1,7 @@
-{{
-    config(
-        materialized = 'incremental',
-        unique_key   = 'sk_payment_id',
-        on_schema_change = 'sync_all_columns'
-    )
-}}
-
 with source as (
 
     select *
     from {{ source('revenue', 'payments') }}
-    {% if is_incremental() %}
-        where
-            cast(payment_date as date)
-            > (select max(payment_date) from {{ this }}) -- noqa: AL03,RF02
-    {% endif %}
 
 ),
 

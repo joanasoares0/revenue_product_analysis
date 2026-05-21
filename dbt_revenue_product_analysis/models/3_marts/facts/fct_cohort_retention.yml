@@ -12,6 +12,11 @@ models:
         answers:
           - What is the retention rate over time (cohort analysis)?
           - How does activation impact user retention?
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - cohort_month
+            - months_since_cohort
     description: >
       Cohort-based subscription retention fact table. One row per
       (cohort_month × months_since_cohort). Sourced from int_revenue__cohort_retention

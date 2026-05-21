@@ -1,9 +1,7 @@
 {#
-Cohort retention logic — encapsulates non-trivial date arithmetic that would be
-impractical to replicate in a BI tool: casting yyyyMM strings to dates,
-add_months range checks against effective_end_date, and months-since-cohort
-window. Also splits retention by whether the user ever completed the activation
-event. Consumed by fct_cohort_retention in the marts layer.
+Cohort retention logic.
+Also splits retention by whether the user ever completed the activation
+event.
 #}
 
 with subscriptions as (
@@ -18,7 +16,7 @@ activated_users as (
     where is_activation_event
 ),
 
--- Cast cohort_month (yyyyMM string) to a first-of-month date for arithmetic
+-- Cohorts info
 cohorts as (
     select
         s.cohort_month,

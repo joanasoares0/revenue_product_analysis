@@ -7,10 +7,24 @@ Join to dim_users for segment-level revenue analysis;
 filter on is_revenue_recognised for MRR/ARR metrics.
 #}
 
+{{
+    config(
+        materialized         = 'incremental',
+        unique_key           = 'sk_payment_id',
+        incremental_strategy = 'merge'
+    )
+}}
+
 with payments as (
 
     select *
     from {{ ref('stg_revenue__payments') }}
+    {% if is_incremental() %}
+        -- 3-day lookback handles late-arriving payments without reprocessing full history
+        where
+            payment_date
+            >= (select date_sub(max(t.payment_date), 3) as max_date from {{ this }} as t)
+    {% endif %}
 
 ),
 

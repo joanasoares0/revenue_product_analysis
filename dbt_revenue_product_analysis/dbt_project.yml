@@ -11,7 +11,7 @@ clean-targets:
   - "dbt_packages"
 
 seeds:
-  # Builds seeds into '<your_schema_name>_raw'
+  # plans.csv is a static seed (plan catalogue). Update manually if pricing tiers change.
   dbt_revenue_product_analysis:
     +schema: 0_raw
 

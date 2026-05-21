@@ -141,10 +141,10 @@ jobs:
         # The CI workflow downloads this manifest on the next PR so it can compare
         # what changed and run a slim build (state:modified+ with --defer).
         # The CD workflow also downloads it on the next merge to do a stateful deploy.
-        # retention-days: 7 keeps storage costs low; adjust if your PR cycle is longer.
+        # retention-days: 30 ensures the manifest is available for rollbacks within a month.
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.MANIFEST_ARTIFACT_NAME }}
           path: ./dbt_revenue_product_analysis/target/manifest.json
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30

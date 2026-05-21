@@ -15,13 +15,13 @@ select
     max_seats,
     features,
 
+    -- audit
+    _stg_loaded_at,
+
     -- metrics
     monthly_price,
     annual_price,
-    _stg_loaded_at,
     round(annual_price / 12.0, 2) as annual_monthly_equivalent,
-
-    -- audit
     round(
         (1 - (annual_price / nullif(monthly_price * 12.0, 0))) * 100,
         1
