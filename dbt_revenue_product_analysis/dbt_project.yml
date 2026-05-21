@@ -26,10 +26,6 @@ models:
       relation: true
       columns: true
 
-    0_sources:
-      +docs:
-        node_color: "#A8A8A8"
-
     1_staging:
       +materialized: view
       +schema: 1_staging

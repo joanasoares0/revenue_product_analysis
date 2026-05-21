@@ -71,8 +71,9 @@ models:
         description: FK → dim_users.sk_user_id.
         data_tests:
           - relationships:
-              to: ref('dim_users')
-              field: sk_user_id
+              arguments:
+                to: ref('dim_users')
+                field: sk_user_id
       - name: plan_id
         data_type: string
         description: Natural FK — source plan identifier.
@@ -81,8 +82,9 @@ models:
         description: FK → dim_plans.sk_plan_id.
         data_tests:
           - relationships:
-              to: ref('dim_plans')
-              field: sk_plan_id
+              arguments:
+                to: ref('dim_plans')
+                field: sk_plan_id
       - name: mrr_month
         data_type: string
         description: Active month in yyyyMM format (part of grain).

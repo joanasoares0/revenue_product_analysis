@@ -76,11 +76,11 @@ The pipeline follows a layered dbt architecture (sources → staging → interme
 
 | Environment | Catalog | Schema pattern |
 |---|---|---|
-| Dev | `dev` | `dev` (or per-developer prefix) |
-| CI | `dev` | `ci_pr_<PR_number>` (isolated per PR, cleaned up on merge) |
-| Prod | `prod` | `prod` |
+| Dev | `revenue_product_analysis` | `dev` (or per-developer prefix) |
+| CI | `revenue_product_analysis` | `ci_PR_<number>__<sha>` (isolated per PR, cleaned up on merge) |
+| Prod | `prod_revenue_product_analysis` | `prod` |
 
-CI runs inside the `dev` catalog in an isolated PR-scoped schema, keeping it separate from developer workspaces without requiring a dedicated catalog.
+CI runs inside the `revenue_product_analysis` catalog in an isolated PR-scoped schema, keeping it separate from developer workspaces without requiring a dedicated catalog.
 
 **Stack & practices:**
 - **dbt Core** — transformation, testing, documentation, contracts
@@ -112,7 +112,7 @@ Acquisition channel and company size are the strongest predictors of conversion 
 
 ## Next Steps
 
-- **Source catalog separation** — sources are currently declared inside the `dev` catalog alongside transformation models. A cleaner approach would be a dedicated `raw` catalog (or one catalog per source system), with each source in its own schema (e.g. `raw.subscriptions`, `raw.events`). This separates ingestion from transformation, makes access control simpler, and reflects how source data typically lands from ETL tools in production.
+- **Source catalog separation** — sources are currently declared inside the `revenue_product_analysis` catalog alongside transformation models. A cleaner approach would be a dedicated `raw` catalog (or one catalog per source system), with each source in its own schema (e.g. `raw.subscriptions`, `raw.events`). This separates ingestion from transformation, makes access control simpler, and reflects how source data typically lands from ETL tools in production.
 
 - **Incremental materializations** — `fct_events`, `fct_payments`, `fct_subscriptions`, and `fct_mrr` are all built incrementally (`unique_key` + `merge`). Transaction tables filter on their date column with a 3-day lookback; `fct_subscriptions` re-processes active and recently started subscriptions on each run; `fct_mrr` runs all CTEs on full history (required for correct LAG-based movement type classification) and filters only the final output to the last 3 months for the merge. Use `--full-refresh` to rebuild from scratch. Staging models remain views — incremental only applies to physical table materializations.
 
