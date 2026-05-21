@@ -27,7 +27,8 @@ Use --full-refresh to rebuild from scratch.
     config(
         materialized         = 'incremental',
         unique_key           = 'sk_mrr_id',
-        incremental_strategy = 'merge'
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
     )
 }}
 

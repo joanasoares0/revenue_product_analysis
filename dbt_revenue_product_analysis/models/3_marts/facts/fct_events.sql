@@ -10,7 +10,8 @@ use is_activation_event / is_conversion_event for milestone analysis.
     config(
         materialized         = 'incremental',
         unique_key           = 'sk_event_id',
-        incremental_strategy = 'merge'
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
     )
 }}
 

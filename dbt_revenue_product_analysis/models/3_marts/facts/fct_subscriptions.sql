@@ -11,7 +11,8 @@ Use effective_end_date for point-in-time range queries.
     config(
         materialized         = 'incremental',
         unique_key           = 'sk_subscription_id',
-        incremental_strategy = 'merge'
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
     )
 }}
 

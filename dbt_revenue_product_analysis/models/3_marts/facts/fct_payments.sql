@@ -11,7 +11,8 @@ filter on is_revenue_recognised for MRR/ARR metrics.
     config(
         materialized         = 'incremental',
         unique_key           = 'sk_payment_id',
-        incremental_strategy = 'merge'
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
     )
 }}
 
