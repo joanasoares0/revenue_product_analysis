@@ -14,7 +14,23 @@ MRR movement types:
   reactivation— user returned after a gap with same MRR
   retained    — same subscription, same MRR as previous month
   churned     — synthetic end-of-life row at cancellation month
+
+Incremental strategy: all CTEs (including the LAG window) run on full history
+on every incremental run. Filtering subscription_months before the LAG would
+produce wrong movement types for users whose prior month falls outside the window
+(e.g. a retained user at the window boundary would be misclassified as 'new').
+Only the final SELECT is filtered to the lookback window for the merge.
+Use --full-refresh to rebuild from scratch.
 #}
+
+{{
+    config(
+        materialized         = 'incremental',
+        unique_key           = 'sk_mrr_id',
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
+    )
+}}
 
 with subscriptions as (
 
@@ -146,20 +162,22 @@ classified as (
 
 ),
 
--- Synthetic churn row: one record at the month AFTER subscription ends
--- This allows summing churned_mrr in waterfall queries without extra joins
-churn_rows as (
+-- Synthetic churn row: one record at the month AFTER subscription ends.
+-- Split into two CTEs so mrr_month is available for generate_surrogate_key.
+churn_base as (
 
     select
-        concat(s.subscription_id, '_churn') as sk_mrr_id,
-
         s.subscription_id,
         s.sk_subscription_id,
         s.user_id,
         s.sk_user_id,
         s.plan_id,
         s.sk_plan_id,
-
+        s.cohort_month,
+        s.billing_cycle,
+        s.is_spike_churn,
+        s.mrr,
+        s.mrr as prev_mrr,
         -- Churn lands in the first month after subscription ended
         date_format(
             add_months(
@@ -168,27 +186,49 @@ churn_rows as (
             ),
             'yyyyMM'
         ) as mrr_month,
-
-        s.cohort_month,
-
-        s.billing_cycle,
-        'churned' as mrr_movement_type,
-
-        s.is_spike_churn,
-
-        s.mrr,
-        s.mrr as prev_mrr,
         -s.mrr as mrr_delta
 
     from subscriptions as s
     where
         s.is_churned
         and coalesce(s.subscription_end_date, s.cancelled_date) is not null
+        {% if is_incremental() %}
+            and date_format(
+                add_months(coalesce(s.subscription_end_date, s.cancelled_date), 1),
+                'yyyyMM'
+            ) >= date_format(add_months(current_date(), -3), 'yyyyMM')
+        {% endif %}
+
+),
+
+churn_rows as (
+
+    select
+        {{ dbt_utils.generate_surrogate_key(['subscription_id', 'mrr_month']) }} as sk_mrr_id, -- noqa: TMP,PRS,LT02,LT05
+        subscription_id,
+        sk_subscription_id,
+        user_id,
+        sk_user_id,
+        plan_id,
+        sk_plan_id,
+        mrr_month,
+        cohort_month,
+        billing_cycle,
+        'churned'  as mrr_movement_type,
+        is_spike_churn,
+        mrr,
+        prev_mrr,
+        mrr_delta
+
+    from churn_base
 
 )
 
 select * -- noqa: AM07
 from classified
+{% if is_incremental() %}
+    where mrr_month >= date_format(add_months(current_date(), -3), 'yyyyMM')
+{% endif %}
 
 union all
 

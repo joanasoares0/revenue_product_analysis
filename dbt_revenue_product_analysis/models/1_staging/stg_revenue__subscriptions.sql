@@ -22,7 +22,9 @@ cleaned as (
         lower(trim(status)) = 'active'          as is_active,
         lower(trim(status)) = 'cancelled'       as is_churned,
         lower(trim(status)) = 'trial expired'   as is_trial_expired,
-        -- churn spike: Jul–Dec 2023 pricing event
+        -- A pricing change in Jul 2023 caused a 2× churn spike that lasted until Dec 2023.
+        -- This flag isolates that cohort for waterfall analysis (see fct_mrr.is_spike_churn).
+        -- Window is controlled by vars mrr_spike_start / mrr_spike_end in dbt_project.yml.
         (
             is_churned
             and cast(cancelled_at as date) >= cast('{{ var("mrr_spike_start") }}' as date)

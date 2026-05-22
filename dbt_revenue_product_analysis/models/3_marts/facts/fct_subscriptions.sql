@@ -7,11 +7,26 @@ cancellation).
 Use effective_end_date for point-in-time range queries.
 #}
 
+{{
+    config(
+        materialized         = 'incremental',
+        unique_key           = 'sk_subscription_id',
+        incremental_strategy = 'merge',
+        on_schema_change     = 'append_new_columns'
+    )
+}}
 
 with subscriptions as (
 
     select *
     from {{ ref('stg_revenue__subscriptions') }}
+    {% if is_incremental() %}
+        -- Active subscriptions can update any time (milestones fill in over lifecycle).
+        -- Also capture recently started subscriptions (last 3 months).
+        where
+            is_active
+            or trial_start_date >= add_months(current_date(), -3)
+    {% endif %}
 
 ),
 

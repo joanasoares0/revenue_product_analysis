@@ -1,6 +1,8 @@
 [sqlfluff]
 templater = jinja
 dialect = databricks
+# AL07 (aliasing.forbid): disables the rule that forbids table aliases — needed for CTEs
+# RF03 (references.consistent): dbt Jinja refs are sometimes flagged as inconsistent by sqlfluff
 exclude_rules = AL07, RF03
 runaway_limit = 10
 max_line_length = 100

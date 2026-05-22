@@ -45,14 +45,18 @@ models:
       - name: cancelled_date
         description: "The date when the subscription was cancelled (normalized from timestamp)."
       - name: effective_end_date
-        description: Sentinel date for active subscriptions (simplifies range queries).
+        description: >
+          Subscription end date, or '2099-12-31' sentinel for active subscriptions.
+          Use for range queries (e.g. effective_end_date >= target_month).
       - name: trial_duration_days
         description: Duration of the trial in days.
       - name: subscription_duration_days
-        description: Duration of the subscription in days.
+        description: Duration of the paid subscription in days (null if subscription has not started).
       - name: cohort_month
         description: The month when the trial started (for cohort analysis).
       - name: is_spike_churn
-        description: Flag indicating if this is spike churn based on pricing event.
+        description: >
+          True if the subscription was cancelled during the Jul–Dec 2023 pricing event.
+          Window controlled by vars mrr_spike_start / mrr_spike_end in dbt_project.yml.
       - name: _stg_loaded_at
         description: Timestamp when the record was loaded into staging.

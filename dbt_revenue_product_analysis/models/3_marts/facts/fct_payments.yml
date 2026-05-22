@@ -41,9 +41,19 @@ models:
       - name: sk_user_id
         data_type: string
         description: FK → dim_users.sk_user_id.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: sk_user_id
       - name: sk_plan_id
         data_type: string
         description: FK → dim_plans.sk_plan_id.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_plans')
+                field: sk_plan_id
       - name: user_id
         data_type: string
         description: Natural FK — source user identifier.

@@ -80,6 +80,37 @@ A dbt project that models raw SaaS event, subscription, and payment data into an
 | `fct_cohort_retention` | cohort_month × months_since_cohort | Retention heatmap data with SaaS benchmark comparisons |
 | `fct_user_funnel` | user_id | Accumulating snapshot of each user's highest funnel stage, time-to-milestone, and subscription status |
 
+## Analyses
+
+`analyses/business_questions.sql` contains 14 ad-hoc queries that directly address the business questions above. Unlike models, analyses are not materialised — they run on demand against the mart tables.
+
+Compile to render Jinja references before executing:
+
+```bash
+dbt compile --select analyses/business_questions.sql --profiles-dir .
+```
+
+The compiled SQL lands in `target/compiled/`. Copy the relevant query into your Databricks SQL editor or BI tool.
+
+| # | Question | Key tables |
+|---|---|---|
+| 1 | MRR/ARR over time | `fct_mrr` |
+| 2 | Revenue change drivers — MRR waterfall | `fct_mrr` |
+| 3 | Revenue churn rate and net revenue retention | `fct_mrr` |
+| 4 | Revenue by customer segment (latest month) | `fct_mrr`, `dim_users`, `dim_plans` |
+| 5 | ARPU by plan over time | `fct_mrr`, `dim_plans` |
+| 6 | Customer lifetime value (LTV) by plan | `fct_subscriptions`, `dim_plans` |
+| 7 | Revenue seasonality | `fct_mrr` |
+| 8 | Funnel conversion rates — global totals | `fct_user_funnel` |
+| 9 | Funnel drop-off map | `fct_user_funnel` |
+| 10 | Median and average time to activation and conversion | `fct_user_funnel` |
+| 11 | Activation impact on retention across cohorts | `fct_cohort_retention` |
+| 12 | Converters vs non-converters by segment | `fct_user_funnel` |
+| 13 | Full cohort retention heatmap with SaaS benchmark | `fct_cohort_retention` |
+| 14 | Conversion and activation rate by acquisition channel | `fct_user_funnel` |
+| 15 | Most common cancellation reasons by plan | `fct_subscriptions`, `dim_plans` |
+| 16 | Payment success rate by plan and billing cycle | `fct_payments`, `dim_plans` |
+
 ## Tech stack
 
 | Tool | Purpose |

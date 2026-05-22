@@ -1,20 +1,7 @@
-{{
-    config(
-        materialized = 'incremental',
-        unique_key   = 'sk_event_id',
-        on_schema_change = 'sync_all_columns'
-    )
-}}
-
 with source as (
 
     select *
     from {{ source('revenue', 'events') }}
-    {% if is_incremental() %}
-        where
-            cast(event_at as date)
-            > (select max(event_date) from {{ this }}) -- noqa: AL03,RF02
-    {% endif %}
 
 ),
 

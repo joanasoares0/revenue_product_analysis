@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# dbt
+logs/
+
+# Linters / formatters
+.ruff_cache/
+
+# Credentials & environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db

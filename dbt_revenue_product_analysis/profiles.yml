@@ -12,8 +12,8 @@ dbt_revenue_product_analysis:
 
     ci:
       type: databricks
-      database: ci_revenue_product_analysis
-      schema: "{{ env_var('SCHEMA_PREFIX', 'PR') }}_{{ var('schema_id') }}"
+      database: revenue_product_analysis
+      schema: "ci_{{ env_var('SCHEMA_PREFIX', 'pr') }}_{{ var('schema_id') }}"
       host: "{{ env_var('DB_HOST_CI') }}"
       http_path: "{{ env_var('DB_HTTP_PATH_CI') }}"
       token: "{{ env_var('DB_TOKEN_CI') }}"
