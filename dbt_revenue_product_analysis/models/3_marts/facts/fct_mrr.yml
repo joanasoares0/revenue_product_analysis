@@ -17,9 +17,10 @@ models:
           - Are there seasonality patterns? (group by mrr_month, compare YoY)
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - subscription_id
-            - mrr_month
+          arguments:
+            combination_of_columns:
+              - subscription_id
+              - mrr_month
     description: >
       MRR periodic snapshot fact table — the central SaaS revenue metric table.
       One row per (subscription_id × mrr_month) for every month a subscription was

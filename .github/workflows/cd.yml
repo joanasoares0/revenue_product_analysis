@@ -89,11 +89,24 @@ jobs:
             exit 0
           fi
 
-          echo "Found artifact ID: $artifact_id — downloading..."
-          curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          echo "Found artifact ID: $artifact_id — resolving pre-signed download URL..."
+          # GitHub returns a 302 redirect to a pre-signed S3 URL.
+          # We must NOT forward the Authorization header to S3 — pre-signed URLs
+          # already carry credentials in the query string, and an extra Authorization
+          # header causes S3 to return a 403 XML error instead of the zip.
+          download_url=$(curl -sI \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" \
-              -o artifact.zip
+              | grep -i '^location:' | tr -d '\r' | sed 's/^[Ll]ocation: //')
+
+          if [ -z "$download_url" ]; then
+            echo "Failed to get download URL for artifact $artifact_id — skipping."
+            exit 0
+          fi
+
+          echo "Downloading artifact from pre-signed URL..."
+          curl -sL "$download_url" -o artifact.zip
 
           unzip -q artifact.zip -d state
           echo "Manifest extracted to ./state/"
