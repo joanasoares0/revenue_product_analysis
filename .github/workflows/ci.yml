@@ -104,7 +104,7 @@ jobs:
           artifact_id=$(grep -A10 '"name": "${{ env.MANIFEST_ARTIFACT_NAME }}"' artifacts.json \
             | grep '"archive_download_url":' \
             | head -n1 \
-            | sed 's/.*artifacts\/\([0-9]*\)\/zip.*/\1/')
+            | sed 's/.*artifacts\/\([0-9]*\)\/zip.*/\1/' || true)
 
           if [ -z "$artifact_id" ]; then
             echo "No '${{ env.MANIFEST_ARTIFACT_NAME }}' artifact found — will run a full build."
@@ -120,7 +120,7 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" \
-              | grep -i '^location:' | tr -d '\r' | sed 's/^[Ll]ocation: //')
+              | grep -i '^location:' | tr -d '\r' | sed 's/^[Ll]ocation: //' || true)
 
           if [ -z "$download_url" ]; then
             echo "Failed to get download URL for artifact $artifact_id — skipping."
